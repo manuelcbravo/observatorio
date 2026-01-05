@@ -47,11 +47,11 @@ class HomeController extends Controller
                 'facebook' => 'nullable|url',
                 'twitter' => 'nullable|url',
                 'instagram' => 'nullable|url',
-                'anonimo' => 'boolean', // Mantenemos boolean, ya que Laravel lo interpreta bien.
+                'anonimo' => 'boolean',
                 'tipo_reporte_id' => 'nullable|integer',
                 'estado_id' => 'required|integer',
                 'municipio_id' => 'required|integer',
-                'codigo_postal' => 'required|digits:5', // Cambio sugerido para validar 5 dígitos.
+                'codigo_postal' => 'required|digits:5', 
                 'colonia_id' => 'required|integer',
                 'comentario' => 'nullable|string',
                 'lat' => 'required|numeric',
@@ -59,7 +59,6 @@ class HomeController extends Controller
                 'fotos.*' => 'nullable|image|max:2048',
             ];
     
-            // Si el checkbox de anonimo no está marcado, asegúrate de que los campos de contacto sean requeridos
             if (!($request->has('anonimo') && $request->input('anonimo') == '1')) {
                 $rules['nombre_contacto'] = 'required|string|max:255';
                 $rules['telefono_contacto'] = 'required|string|max:20';
