@@ -154,6 +154,24 @@ class HomeController extends Controller
             ],
         ];
 
+        $datosDuros = [
+            [
+                'titulo' => 'Municipios activos',
+                'valor' => '14',
+                'detalle' => 'Cobertura estatal',
+            ],
+            [
+                'titulo' => 'Reportes verificados',
+                'valor' => '212',
+                'detalle' => 'Con evidencia geolocalizada',
+            ],
+            [
+                'titulo' => 'Tiempo máx. de respuesta',
+                'valor' => '27h',
+                'detalle' => 'Últimas 72h',
+            ],
+        ];
+
         $reportesDestacados = [
             [
                 'tipo' => 'Bache y pavimento',
@@ -197,6 +215,61 @@ class HomeController extends Controller
             ['label' => 'Apodaca', 'valor' => 33],
         ];
 
-        return view('pages.dashboard.demo', compact('metricas', 'reportesDestacados', 'heatmap'));
+        $mapaPuntos = [
+            [
+                'lat' => '25.6866° N',
+                'lng' => '100.3161° O',
+                'estatus' => 'En gestión',
+                'reporte' => 'Bache profundo',
+                'intensidad' => 0.82,
+            ],
+            [
+                'lat' => '25.7497° N',
+                'lng' => '100.2895° O',
+                'estatus' => 'Cuadrilla en sitio',
+                'reporte' => 'Falla de alumbrado',
+                'intensidad' => 0.64,
+            ],
+            [
+                'lat' => '25.6751° N',
+                'lng' => '100.3451° O',
+                'estatus' => 'Cerrado',
+                'reporte' => 'Retiro de escombro',
+                'intensidad' => 0.48,
+            ],
+            [
+                'lat' => '25.8100° N',
+                'lng' => '100.2630° O',
+                'estatus' => 'Programado',
+                'reporte' => 'Señalética dañada',
+                'intensidad' => 0.36,
+            ],
+        ];
+
+        $graficas = [
+            'tipos' => [
+                ['label' => 'Bache y pavimento', 'valor' => 68],
+                ['label' => 'Alumbrado público', 'valor' => 54],
+                ['label' => 'Basura y escombro', 'valor' => 37],
+                ['label' => 'Seguridad', 'valor' => 29],
+            ],
+            'municipios' => [
+                ['label' => 'Monterrey', 'valor' => 82],
+                ['label' => 'San Nicolás', 'valor' => 61],
+                ['label' => 'Guadalupe', 'valor' => 57],
+                ['label' => 'Santa Catarina', 'valor' => 39],
+            ],
+            'tendencia' => [
+                ['label' => 'L', 'valor' => 18],
+                ['label' => 'M', 'valor' => 32],
+                ['label' => 'X', 'valor' => 44],
+                ['label' => 'J', 'valor' => 27],
+                ['label' => 'V', 'valor' => 36],
+                ['label' => 'S', 'valor' => 21],
+                ['label' => 'D', 'valor' => 14],
+            ],
+        ];
+
+        return view('pages.dashboard.demo', compact('metricas', 'datosDuros', 'reportesDestacados', 'heatmap', 'mapaPuntos', 'graficas'));
     }
 }
