@@ -117,10 +117,86 @@ class HomeController extends Controller
     }
 
     public function getColonias($municipioId, $cp)
-{
-    $colonias = cat_colonia::where('id_municipio', $municipioId)->
-    where('cp', $cp)->
-    get(['id', 'nombre']);
-    return response()->json($colonias);
-}
+    {
+        $colonias = cat_colonia::where('id_municipio', $municipioId)
+            ->where('cp', $cp)
+            ->get(['id', 'nombre']);
+
+        return response()->json($colonias);
+    }
+
+    public function dashboardDemo()
+    {
+        $metricas = [
+            [
+                'label' => 'Reportes capturados',
+                'value' => '248',
+                'delta' => '+12%',
+                'accent' => 'primary',
+            ],
+            [
+                'label' => 'Atendidos en 72h',
+                'value' => '186',
+                'delta' => '75%',
+                'accent' => 'success',
+            ],
+            [
+                'label' => 'Promedio de respuesta',
+                'value' => '14h',
+                'delta' => '-2h vs semana pasada',
+                'accent' => 'info',
+            ],
+            [
+                'label' => 'Reportes con imagen',
+                'value' => '92%',
+                'delta' => '+6%',
+                'accent' => 'warning',
+            ],
+        ];
+
+        $reportesDestacados = [
+            [
+                'tipo' => 'Bache y pavimento',
+                'colonia' => 'Centro Histórico',
+                'estado' => 'Nuevo León',
+                'fecha' => 'Hace 2h',
+                'estatus' => 'En gestión',
+                'badge' => 'info',
+                'imagen' => 'https://images.unsplash.com/photo-1508896694512-1eade558679a?auto=format&fit=crop&w=800&q=80',
+                'lat' => '25.6866° N',
+                'lng' => '100.3161° O',
+            ],
+            [
+                'tipo' => 'Alumbrado público',
+                'colonia' => 'San Nicolás',
+                'estado' => 'Nuevo León',
+                'fecha' => 'Hace 5h',
+                'estatus' => 'Enviado a cuadrilla',
+                'badge' => 'success',
+                'imagen' => 'https://images.unsplash.com/photo-1504595403659-9088ce801e29?auto=format&fit=crop&w=800&q=80',
+                'lat' => '25.7497° N',
+                'lng' => '100.2895° O',
+            ],
+            [
+                'tipo' => 'Basura y escombro',
+                'colonia' => 'Obispado',
+                'estado' => 'Nuevo León',
+                'fecha' => 'Ayer',
+                'estatus' => 'Cerrado',
+                'badge' => 'secondary',
+                'imagen' => 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?auto=format&fit=crop&w=800&q=80',
+                'lat' => '25.6751° N',
+                'lng' => '100.3451° O',
+            ],
+        ];
+
+        $heatmap = [
+            ['label' => 'Centro', 'valor' => 76],
+            ['label' => 'San Pedro', 'valor' => 42],
+            ['label' => 'Guadalupe', 'valor' => 58],
+            ['label' => 'Apodaca', 'valor' => 33],
+        ];
+
+        return view('pages.dashboard.demo', compact('metricas', 'reportesDestacados', 'heatmap'));
+    }
 }
