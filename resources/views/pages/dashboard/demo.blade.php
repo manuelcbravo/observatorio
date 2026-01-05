@@ -24,6 +24,22 @@
                             <span class="badge bg-{{ $metrica['accent'] }} bg-opacity-25 text-white border border-0">{{ $metrica['delta'] }}</span>
                         </div>
                         <div class="display-6 fw-bold">{{ $metrica['value'] }}</div>
+                        <div class="small text-white-50">Indicador demo en tiempo real</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="row g-3 mb-4">
+            @foreach($datosDuros as $dato)
+                <div class="col-12 col-lg-4">
+                    <div class="form-card h-100 shadow-sm" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                        <p class="text-uppercase text-muted fw-semibold small mb-1">{{ $dato['titulo'] }}</p>
+                        <div class="d-flex align-items-baseline gap-2 mb-1">
+                            <span class="display-6 fw-bold" style="color: #0f766e;">{{ $dato['valor'] }}</span>
+                            <span class="badge bg-light text-dark rounded-pill">Dato duro</span>
+                        </div>
+                        <p class="text-muted mb-0">{{ $dato['detalle'] }}</p>
                     </div>
                 </div>
             @endforeach
@@ -77,12 +93,25 @@
                         <span class="badge-soft rounded-pill px-3 py-2 fw-semibold">Demo</span>
                     </div>
                     <p class="text-muted">Usa esta plantilla para conectar con tu API y mostrar densidad de reportes. Incluye controles para rango de fechas y tipo de incidencia.</p>
-                    <div class="bg-dark bg-opacity-75 rounded-4 position-relative overflow-hidden" style="height: 260px;">
-                        <div class="position-absolute top-50 start-50 translate-middle text-center text-white">
-                            <div class="spinner-border text-info mb-2" role="status"></div>
-                            <div class="fw-semibold">Mapa interactivo en desarrollo</div>
-                            <small class="d-block text-white-50">Integra tu proveedor de mapas o heatmaps aquí</small>
-                        </div>
+                    <div class="bg-dark bg-opacity-75 rounded-4 position-relative overflow-hidden" style="height: 260px; background: radial-gradient(circle at 20% 30%, rgba(56,189,248,.25), transparent 35%), radial-gradient(circle at 80% 70%, rgba(16,185,129,.25), transparent 30%), #0f172a;">
+                        <div class="position-absolute top-0 bottom-0 start-0 end-0" style="background-image: url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/-100.3161,25.6866,11.5,0/800x600?access_token=pk.eyJ1IjoiZGVtb3VzZXIiLCJhIjoiY2ttcWx2aGd0MGgycTJvcXVxdWdqa2VqZCJ9.dummy'); opacity: .12; background-size: cover;"></div>
+                        @foreach($mapaPuntos as $index => $punto)
+                            @php
+                                $left = 10 + ($index * 18);
+                                $top = 12 + ($index * 15);
+                            @endphp
+                            <div class="position-absolute" style="left: calc({{ $left }}% - 10px); top: calc({{ $top }}% - 10px);">
+                                <div class="rounded-circle border border-2 border-white shadow" style="width: 18px; height: 18px; background: linear-gradient(135deg, #0ea5e9, #0f766e); opacity: {{ $punto['intensidad'] }};"></div>
+                                <div class="bg-white text-dark rounded-4 px-3 py-2 mt-2 shadow-sm" style="min-width: 190px;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-primary bg-opacity-25 text-primary">{{ $punto['estatus'] }}</span>
+                                        <span class="small text-muted">{{ $punto['lat'] }}</span>
+                                    </div>
+                                    <div class="fw-semibold">{{ $punto['reporte'] }}</div>
+                                    <div class="small text-muted">Lng {{ $punto['lng'] }}</div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         @foreach($heatmap as $punto)
@@ -172,6 +201,65 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-12 col-lg-4">
+                <div class="form-card h-100">
+                    <p class="text-uppercase text-muted fw-semibold small mb-1">Tipos de eventualidad</p>
+                    <h5 class="fw-bold mb-3">Distribución demo</h5>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach($graficas['tipos'] as $tipo)
+                            <div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-semibold">{{ $tipo['label'] }}</span>
+                                    <span class="text-muted">{{ $tipo['valor'] }} reportes</span>
+                                </div>
+                                <div class="progress" role="progressbar" aria-valuenow="{{ $tipo['valor'] }}" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $tipo['valor'] }}%"></div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="form-card h-100">
+                    <p class="text-uppercase text-muted fw-semibold small mb-1">Municipios con más reportes</p>
+                    <h5 class="fw-bold mb-3">Concentración</h5>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach($graficas['municipios'] as $municipio)
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle" style="width: 12px; height: 12px; background: linear-gradient(135deg, #0ea5e9, #0f766e);"></div>
+                                    <span class="fw-semibold">{{ $municipio['label'] }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress" style="width: 120px; height: 8px;">
+                                        <div class="progress-bar bg-success" style="width: {{ $municipio['valor'] }}%"></div>
+                                    </div>
+                                    <span class="fw-bold">{{ $municipio['valor'] }}%</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="form-card h-100">
+                    <p class="text-uppercase text-muted fw-semibold small mb-1">Tendencia semanal</p>
+                    <h5 class="fw-bold mb-3">Volumen diario</h5>
+                    <div class="d-flex align-items-end gap-2" style="height: 180px;">
+                        @foreach($graficas['tendencia'] as $dia)
+                            <div class="flex-grow-1 text-center">
+                                <div class="rounded-top-4 bg-primary bg-opacity-75 mx-auto" style="height: calc({{ $dia['valor'] }}% * 1.4); max-height: 140px;"></div>
+                                <small class="d-block mt-2 text-muted fw-semibold">{{ $dia['label'] }}</small>
+                            </div>
+                        @endforeach
+                    </div>
+                    <p class="small text-muted mb-0">Interpreta la tendencia sin depender de datos reales. Sustituye los valores por tu API.</p>
                 </div>
             </div>
         </div>
