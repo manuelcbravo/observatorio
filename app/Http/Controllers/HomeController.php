@@ -311,4 +311,42 @@ class HomeController extends Controller
             'ultimaActualizacion'
         ));
     }
+
+    public function socialRedirect(string $provider)
+    {
+        $allowedProviders = ['google', 'facebook', 'twitter'];
+
+        if (!in_array($provider, $allowedProviders, true)) {
+            abort(404);
+        }
+
+        if (class_exists(\Laravel\Socialite\Facades\Socialite::class)) {
+            return \Laravel\Socialite\Facades\Socialite::driver($provider)->redirect();
+        }
+
+        return redirect()
+            ->route('reportes.index')
+            ->with('info', 'La autenticación social está lista para configurar con Socialite.');
+    }
+
+    public function socialCallback(string $provider)
+    {
+        $allowedProviders = ['google', 'facebook', 'twitter'];
+
+        if (!in_array($provider, $allowedProviders, true)) {
+            abort(404);
+        }
+
+        if (class_exists(\Laravel\Socialite\Facades\Socialite::class)) {
+            $socialUser = \Laravel\Socialite\Facades\Socialite::driver($provider)->user();
+
+            return redirect()
+                ->route('reportes.index')
+                ->with('info', 'Inicio social completado para ' . $socialUser->getName() . '.');
+        }
+
+        return redirect()
+            ->route('reportes.index')
+            ->with('info', 'La autenticación social está lista para configurar con Socialite.');
+    }
 }

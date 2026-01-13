@@ -7,16 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --brand-primary: #0f766e;
-            --brand-secondary: #0ea5e9;
-            --surface: #ffffff;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-        }
-
         * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
 
         body {
@@ -26,129 +18,137 @@
             color: #0f172a;
         }
 
-        header.navbar { background: transparent; }
-
-        header .navbar-brand, header .nav-link { color: #0f172a !important; }
-
-        header .navbar-brand {
-            letter-spacing: 0.4px;
-        }
-
         .brand-logo {
             width: 44px;
             height: 44px;
             object-fit: contain;
         }
 
-        header .badge {
-            background: rgba(14, 165, 233, 0.12);
-            color: #0369a1;
+        .lightbox-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            z-index: 50;
         }
 
-        .nav-link { transition: color 0.2s ease; }
-        .nav-link:hover { color: var(--brand-secondary) !important; }
-
-        footer {
-            background: #0f172a;
-            padding: 1rem 0;
-            text-align: center;
-            font-size: .9rem;
-            color: #e2e8f0;
+        .lightbox-overlay.active {
+            display: flex;
         }
 
-        .form-card {
-            background: var(--surface);
+        .lightbox-image {
+            max-width: min(960px, 92vw);
+            max-height: 80vh;
             border-radius: 1.25rem;
-            padding: 2.5rem;
-            box-shadow: 0 20px 70px rgba(15, 118, 110, 0.08);
-            border: 1px solid var(--border);
-        }
-
-        .map-container { height: 320px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-            border: none;
-            box-shadow: 0 12px 30px rgba(14, 165, 233, 0.25);
-        }
-
-        .btn-primary:hover { filter: brightness(1.05); }
-
-        .badge-soft {
-            background: #eef2ff;
-            color: #312e81;
-        }
-
-        .input-elevated {
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 0.65rem 0.85rem;
-        }
-
-        .section-title {
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
-
-        .subtle-card {
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(15, 118, 110, 0.08));
-            border: 1px dashed rgba(14, 165, 233, 0.3);
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
+            box-shadow: 0 40px 80px rgba(15, 23, 42, 0.45);
         }
     </style>
 </head>
 <body>
     <!-- Header -->
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light py-3">
-            <div class="container">
-                <!-- Logo -->
-                <a class="navbar-brand d-flex align-items-center fw-bold text-dark" href="#">
-                    <img src="{{ asset('assets/img/logos/logo.png') }}" alt="{{ env('APP_NAME') }} logo" class="brand-logo me-2">
-                    <div>
-                        <div>{{ env('APP_NAME') }}</div>
-                        <small class="text-muted fw-medium">Reportes cívicos en tiempo real</small>
-                    </div>
-                </a>
-
-                <!-- Botón móvil -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <!-- Menú -->
-                <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
-                        <li class="nav-item">
-                            <a class="nav-link fw-semibold text-dark" href="{{ url('/') }}">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-semibold text-dark" href="{{ route('dashboard') }}">Tablero</a>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <span class="badge rounded-pill text-uppercase">Beta pública</span>
-                        </li>
-                    </ul>
+        <nav class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6">
+            <a class="flex items-center gap-3 font-semibold text-slate-900" href="{{ url('/') }}">
+                <img src="{{ asset('assets/img/logos/logo.png') }}" alt="{{ env('APP_NAME') }} logo" class="brand-logo">
+                <div>
+                    <div class="text-lg">{{ env('APP_NAME') }}</div>
+                    <div class="text-sm text-slate-500">Reportes cívicos en tiempo real</div>
                 </div>
+            </a>
+            <button class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm md:hidden" id="nav-toggle" type="button">
+                Menú
+            </button>
+            <div class="hidden items-center gap-6 text-sm font-semibold text-slate-700 md:flex" id="main-nav">
+                <a class="transition hover:text-sky-600" href="{{ url('/') }}">Inicio</a>
+                <a class="transition hover:text-sky-600" href="{{ route('dashboard') }}">Tablero</a>
+                <span class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold uppercase text-sky-700">Beta pública</span>
             </div>
         </nav>
     </header>
 
     <!-- Main -->
-    <main class="container my-5">
+    <main class="mx-auto w-full max-w-6xl px-4 pb-16 pt-6">
         @yield('content')
     </main>
 
     <!-- Footer -->
-    <footer>
-        <div class="container">
-            &copy; {{ date('Y') }} {{ env('APP_NAME') }}. Todos los derechos reservados.
-        </div>
+    <footer class="bg-slate-900 py-6 text-center text-sm text-slate-200">
+        &copy; {{ date('Y') }} {{ env('APP_NAME') }}. Todos los derechos reservados.
     </footer>
 
+    <div class="lightbox-overlay" id="lightbox-overlay" aria-hidden="true">
+        <button class="absolute right-6 top-6 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-slate-700 shadow-lg" type="button" id="lightbox-close">Cerrar</button>
+        <img src="" alt="Vista ampliada" class="lightbox-image" id="lightbox-image">
+    </div>
+
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const navToggle = document.getElementById('nav-toggle');
+        const mainNav = document.getElementById('main-nav');
+        if (navToggle && mainNav) {
+            navToggle.addEventListener('click', () => {
+                mainNav.classList.toggle('hidden');
+                mainNav.classList.toggle('flex');
+                mainNav.classList.toggle('flex-col');
+                mainNav.classList.toggle('rounded-2xl');
+                mainNav.classList.toggle('bg-white');
+                mainNav.classList.toggle('p-4');
+                mainNav.classList.toggle('shadow-lg');
+                mainNav.classList.toggle('absolute');
+                mainNav.classList.toggle('right-4');
+                mainNav.classList.toggle('top-20');
+                mainNav.classList.toggle('w-48');
+            });
+        }
+
+        const lightboxOverlay = document.getElementById('lightbox-overlay');
+        const lightboxImage = document.getElementById('lightbox-image');
+        const lightboxClose = document.getElementById('lightbox-close');
+
+        const openLightbox = (src, alt) => {
+            if (!lightboxOverlay || !lightboxImage) return;
+            lightboxImage.src = src;
+            lightboxImage.alt = alt || 'Vista ampliada';
+            lightboxOverlay.classList.add('active');
+            lightboxOverlay.setAttribute('aria-hidden', 'false');
+        };
+
+        const closeLightbox = () => {
+            if (!lightboxOverlay) return;
+            lightboxOverlay.classList.remove('active');
+            lightboxOverlay.setAttribute('aria-hidden', 'true');
+        };
+
+        document.addEventListener('click', (event) => {
+            const target = event.target.closest('[data-lightbox]');
+            if (!target) return;
+            event.preventDefault();
+            const src = target.getAttribute('data-full') || target.getAttribute('src');
+            openLightbox(src, target.getAttribute('alt'));
+        });
+
+        if (lightboxOverlay) {
+            lightboxOverlay.addEventListener('click', (event) => {
+                if (event.target === lightboxOverlay) {
+                    closeLightbox();
+                }
+            });
+        }
+
+        if (lightboxClose) {
+            lightboxClose.addEventListener('click', closeLightbox);
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+    </script>
     @yield('scripts')
 </body>
 </html>
