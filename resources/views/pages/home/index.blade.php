@@ -450,38 +450,72 @@
     const previewContainer = document.getElementById('fotos-preview');
     const helperText = document.getElementById('fotos-helper');
     const maxFotos = 4;
+    let currentFiles = [];
 
-    const updatePreviews = (files) => {
+    const updateFileInput = () => {
+        if (!fotosInput) {
+            return;
+        }
+        const transfer = new DataTransfer();
+        currentFiles.forEach(file => transfer.items.add(file));
+        fotosInput.files = transfer.files;
+    };
+
+    const updatePreviews = () => {
         const slots = previewContainer.querySelectorAll('[data-foto-slot]');
         slots.forEach((slot, index) => {
-            const file = files[index];
+            const file = currentFiles[index];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    slot.innerHTML = `<img src="${event.target.result}" alt="Vista previa ${index + 1}" class="h-full w-full rounded-xl object-cover">`;
+                    slot.innerHTML = `
+                        <div class="relative h-full w-full">
+                            <img src="${event.target.result}" alt="Vista previa ${index + 1}" class="h-full w-full rounded-xl object-cover">
+                            <button type="button" class="absolute right-2 top-2 rounded-full bg-rose-600 px-2 py-1 text-[10px] font-semibold text-white shadow-md transition hover:bg-rose-700" data-foto-remove="${index}" aria-label="Eliminar imagen ${index + 1}">
+                                Eliminar
+                            </button>
+                        </div>
+                    `;
                 };
                 reader.readAsDataURL(file);
+                slot.classList.remove('text-slate-400', 'border-dashed');
+                slot.classList.add('border-transparent');
             } else {
                 slot.textContent = 'Vista previa';
-                slot.classList.add('text-slate-400');
+                slot.classList.add('text-slate-400', 'border-dashed');
+                slot.classList.remove('border-transparent');
             }
         });
         if (helperText) {
-            helperText.textContent = `${files.length} de ${maxFotos} imágenes seleccionadas.`;
+            helperText.textContent = `${currentFiles.length} de ${maxFotos} imágenes seleccionadas.`;
         }
     };
 
     const enforceFileLimit = (files) => {
-        const list = Array.from(files).slice(0, maxFotos);
-        const transfer = new DataTransfer();
-        list.forEach(file => transfer.items.add(file));
-        fotosInput.files = transfer.files;
-        updatePreviews(list);
+        currentFiles = Array.from(files).slice(0, maxFotos);
+        updateFileInput();
+        updatePreviews();
     };
 
     if (fotosInput) {
         fotosInput.addEventListener('change', () => {
             enforceFileLimit(fotosInput.files);
+        });
+    }
+
+    if (previewContainer) {
+        previewContainer.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-foto-remove]');
+            if (!button) {
+                return;
+            }
+            const index = Number(button.dataset.fotoRemove);
+            if (Number.isNaN(index)) {
+                return;
+            }
+            currentFiles = currentFiles.filter((_, fileIndex) => fileIndex !== index);
+            updateFileInput();
+            updatePreviews();
         });
     }
 

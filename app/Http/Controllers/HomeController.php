@@ -290,10 +290,33 @@ class HomeController extends Controller
             ];
         });
 
+        $coloniasRaw = Reporte::query()
+            ->leftJoin('cat_colonias', 'reportes.colonia_id', '=', 'cat_colonias.id')
+            ->leftJoin('cat_municipios', 'reportes.municipio_id', '=', 'cat_municipios.id')
+            ->select(
+                'cat_colonias.nombre as colonia',
+                'cat_municipios.municipio as municipio',
+                DB::raw('count(*) as total')
+            )
+            ->whereNotNull('reportes.colonia_id')
+            ->groupBy('cat_colonias.nombre', 'cat_municipios.municipio')
+            ->orderByDesc('total')
+            ->get();
+
+        $coloniasMax = $coloniasRaw->max('total') ?: 1;
+        $colonias = $coloniasRaw->map(function ($registro) use ($coloniasMax) {
+            return [
+                'colonia' => $registro->colonia ?? 'Sin colonia',
+                'municipio' => $registro->municipio ?? 'Sin municipio',
+                'total' => $registro->total,
+                'percent' => round(($registro->total / $coloniasMax) * 100),
+            ];
+        });
+
         $graficas = [
             'tipos' => $tipos,
-            'diarias' => $this->buildDailyReportChart($now),
             'evidencia' => $this->buildEvidenceChart($reportesTotal, $reportesConEvidencia),
+            'colonias' => $colonias,
         ];
 
         $ultimaActualizacion = $now->locale('es')->diffForHumans();

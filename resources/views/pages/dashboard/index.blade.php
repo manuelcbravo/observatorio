@@ -45,6 +45,7 @@
             <div>
                 <h5 class="text-lg font-bold text-slate-900">Reportes recientes con evidencia</h5>
                 <p class="text-sm text-slate-500">Galería con latitud/longitud y evidencia registrada en el sistema.</p>
+                <p class="text-xs font-semibold text-slate-400">Se muestran los últimos 6 reportes con evidencia.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">Exportar PDF</button>
@@ -53,7 +54,7 @@
         </div>
 
         <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            @foreach($reportesDestacados as $reporte)
+            @foreach($reportesDestacados->take(6) as $reporte)
                 <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div class="relative h-44 w-full bg-slate-100" data-carousel data-images='@json($reporte['imagenes'])'>
                         <img src="{{ $reporte['imagenes'][0] ?? asset('assets/img/NA.png') }}" class="h-full w-full object-cover" alt="Imagen del reporte" data-lightbox data-gallery='@json($reporte['imagenes'])' data-index="0" data-carousel-image onerror="this.src='{{ asset('assets/img/NA.png') }}'" loading="lazy">
@@ -95,9 +96,9 @@
     <div class="rounded-3xl border border-slate-200 bg-gradient-to-br from-sky-50 to-emerald-50 p-6 shadow-sm">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Mapa de calor</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Focos de atención</p>
                 <h5 class="mt-2 text-lg font-bold text-slate-900">Puntos críticos por zona</h5>
-                <p class="mt-2 text-sm text-slate-500">Mapa operativo con base en reportes geolocalizados para monitorear concentración por zona.</p>
+                <p class="mt-2 text-sm text-slate-500">Resumen operativo basado en reportes geolocalizados para monitorear concentración por zona.</p>
             </div>
             <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">Últimos 30 días</span>
         </div>
@@ -127,24 +128,9 @@
                 </div>
             </div>
         </div>
-        <div class="mt-4 flex flex-wrap gap-3">
-            @foreach($heatmap as $punto)
-                <div class="min-w-[220px] rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-semibold text-slate-800">{{ $punto['label'] }}</span>
-                        <span class="text-sm font-bold text-slate-900">{{ $punto['valor'] }}%</span>
-                    </div>
-                    <div class="mt-2 h-2 rounded-full bg-slate-100">
-                        <div class="h-2 rounded-full bg-sky-500" style="width: {{ $punto['valor'] }}%"></div>
-                    </div>
-                    <div class="mt-2 text-xs text-slate-500">{{ $punto['total'] }} reportes</div>
-                </div>
-            @endforeach
-            @if($heatmap->isEmpty())
-                <div class="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500">
-                    Aún no hay datos geolocalizados para mostrar.
-                </div>
-            @endif
+        <div class="mt-4 flex items-center justify-between text-xs text-slate-500">
+            <span>Última actualización</span>
+            <span class="rounded-full bg-white px-3 py-1 font-semibold text-slate-700 shadow-sm">{{ $ultimaActualizacion }}</span>
         </div>
     </div>
 
@@ -182,21 +168,24 @@
             </div>
         </div>
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Cadencia semanal</p>
-            <h5 class="mt-2 text-lg font-bold text-slate-900">Reportes por día</h5>
-            <p class="mt-2 text-sm text-slate-500">Últimos 7 días en función de los registros reales.</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Tipos de eventualidad</p>
+            <h5 class="mt-2 text-lg font-bold text-slate-900">Distribución por tipo</h5>
+            <p class="mt-2 text-sm text-slate-500">Top de reportes clasificados por tipo de eventualidad.</p>
             <div class="mt-4 space-y-3">
-                @foreach($graficas['diarias'] as $dia)
+                @foreach($graficas['tipos'] as $tipo)
                     <div>
                         <div class="flex items-center justify-between text-sm">
-                            <span class="font-semibold text-slate-700">{{ $dia['label'] }}</span>
-                            <span class="text-slate-500">{{ $dia['total'] }} reportes</span>
+                            <span class="font-semibold text-slate-700">{{ $tipo['label'] }}</span>
+                            <span class="text-slate-500">{{ $tipo['total'] }} reportes</span>
                         </div>
                         <div class="mt-2 h-2 rounded-full bg-slate-100">
-                            <div class="h-2 rounded-full bg-sky-500" style="width: {{ $dia['percent'] }}%"></div>
+                            <div class="h-2 rounded-full bg-emerald-500" style="width: {{ $tipo['percent'] }}%"></div>
                         </div>
                     </div>
                 @endforeach
+                @if($graficas['tipos']->isEmpty())
+                    <div class="text-sm text-slate-500">Sin reportes registrados.</div>
+                @endif
             </div>
         </div>
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -220,22 +209,23 @@
     </div>
 
     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Tipos de eventualidad</p>
-        <h5 class="mt-2 text-lg font-bold text-slate-900">Distribución por tipo</h5>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Colonias con más reportes</p>
+        <h5 class="mt-2 text-lg font-bold text-slate-900">Distribución por colonia y municipio</h5>
+        <p class="mt-2 text-sm text-slate-500">Comparativo total de reportes por colonia con su municipio asociado.</p>
         <div class="mt-4 space-y-4">
-            @foreach($graficas['tipos'] as $tipo)
+            @foreach($graficas['colonias'] as $colonia)
                 <div>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="font-semibold text-slate-700">{{ $tipo['label'] }}</span>
-                        <span class="text-slate-500">{{ $tipo['total'] }} reportes</span>
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span class="font-semibold text-slate-700">{{ $colonia['colonia'] }} · <span class="font-normal text-slate-500">{{ $colonia['municipio'] }}</span></span>
+                        <span class="text-slate-500">{{ $colonia['total'] }} reportes</span>
                     </div>
                     <div class="mt-2 h-2 rounded-full bg-slate-100">
-                        <div class="h-2 rounded-full bg-emerald-500" style="width: {{ $tipo['percent'] }}%"></div>
+                        <div class="h-2 rounded-full bg-sky-500" style="width: {{ $colonia['percent'] }}%"></div>
                     </div>
                 </div>
             @endforeach
-            @if($graficas['tipos']->isEmpty())
-                <div class="text-sm text-slate-500">Sin reportes registrados.</div>
+            @if($graficas['colonias']->isEmpty())
+                <div class="text-sm text-slate-500">Aún no hay colonias registradas.</div>
             @endif
         </div>
     </div>
