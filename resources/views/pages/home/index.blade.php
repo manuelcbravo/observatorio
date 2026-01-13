@@ -1,235 +1,230 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-10 col-xl-9">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-                <p class="text-uppercase text-muted fw-semibold small mb-1">Observatorio ciudadano</p>
-                <h3 class="fw-bold mb-0 section-title">Levantar reporte ciudadano</h3>
-            </div>
-            <div class="subtle-card d-none d-md-flex align-items-center gap-2">
-                <span class="badge-soft rounded-pill px-3 py-2 fw-semibold">UX mejorada</span>
-                <span class="small text-muted">Captura guiada y geolocalización precisa</span>
-            </div>
+<div class="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div class="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white/70 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Observatorio ciudadano</p>
+            <h3 class="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">Levantar reporte ciudadano</h3>
+            <p class="mt-2 text-sm text-slate-500">Comparte tu reporte con la mayor precisión posible. Tus datos de contacto son opcionales y puedes enviar de forma anónima.</p>
         </div>
+        <div class="rounded-2xl border border-dashed border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+            <div class="font-semibold">UX mejorada</div>
+            <div class="text-xs text-sky-600">Captura guiada y geolocalización precisa</div>
+        </div>
+    </div>
 
-        <div class="form-card">
-            <div class="d-flex align-items-start gap-3 mb-4">
-                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 46px; height: 46px;">
-                    📣
-                </div>
-                <p class="mb-0 text-muted">Comparte tu reporte con la mayor precisión posible. Los campos de contacto son opcionales y puedes enviar de forma anónima, pero ayudan a dar seguimiento ágil a tu solicitud.</p>
+    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+        @if(session('success'))
+            <div class="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                <strong class="font-semibold">✅ Éxito:</strong> {{ session('success') }}
             </div>
+        @endif
 
-            <form action="{{ route('reportes.store') }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
-                @csrf
+        @if(session('info'))
+            <div class="mb-5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+                <strong class="font-semibold">ℹ️ Información:</strong> {{ session('info') }}
+            </div>
+        @endif
 
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <strong>✅ Éxito:</strong> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                </div>
-                @endif
-
-                @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
+        @if ($errors->any())
+            <div class="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                <ul class="list-disc pl-4">
+                    @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-                <!-- Iniciar con redes sociales -->
-                <div class="mb-4 p-3 rounded" style="background: rgba(14, 165, 233, 0.06); border: 1px solid rgba(14, 165, 233, 0.15);">
-                    <p class="text-muted fw-semibold mb-3">Acceder rápidamente con</p>
-                    <div class="d-flex flex-wrap justify-content-start gap-2">
-                        <a href="" class="btn btn-light d-flex align-items-center px-3 border border-0 shadow-sm">
-                            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg" alt="Google" width="20" height="20" class="me-2">
-                            Google
-                        </a>
-                        <a href="" class="btn btn-light d-flex align-items-center px-3 border border-0 shadow-sm">
-                            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook" width="20" height="20" class="me-2">
-                            Facebook
-                        </a>
-                        <a href="" class="btn btn-light d-flex align-items-center px-3 border border-0 shadow-sm">
-                            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitter.svg" alt="Twitter" width="20" height="20" class="me-2">
-                            Twitter / X
-                        </a>
-                    </div>
-                </div>
+        <form action="{{ route('reportes.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            @csrf
 
-                <div class="form-check form-switch mb-4">
+            <div class="rounded-2xl border border-sky-100 bg-sky-50/60 p-4">
+                <p class="text-sm font-semibold text-slate-600">Acceder rápidamente con</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <a href="{{ route('socialite.redirect', ['provider' => 'google']) }}" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" data-provider="google" data-socialite>
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg" alt="Google" width="18" height="18">
+                        Google
+                    </a>
+                    <a href="{{ route('socialite.redirect', ['provider' => 'facebook']) }}" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" data-provider="facebook" data-socialite>
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook" width="18" height="18">
+                        Facebook
+                    </a>
+                    <a href="{{ route('socialite.redirect', ['provider' => 'twitter']) }}" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" data-provider="twitter" data-socialite>
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitter.svg" alt="Twitter" width="18" height="18">
+                        Twitter / X
+                    </a>
+                </div>
+                <p class="mt-2 text-xs text-slate-500">Botones listos para integrar Socialite con tus proveedores.</p>
+            </div>
+
+            <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div>
+                    <p class="text-sm font-semibold text-slate-800">Enviar de forma anónima</p>
+                    <p class="text-xs text-slate-500">Si activas esta opción ocultaremos tus datos de contacto.</p>
+                </div>
+                <label class="relative inline-flex cursor-pointer items-center">
                     <input type="hidden" name="anonimo" value="0">
-                    <input class="form-check-input" type="checkbox" id="anonimoSwitch" name="anonimo" value="1" @checked(old('anonimo'))>
-                    <label class="form-check-label fw-semibold" for="anonimoSwitch">
-                        Enviar de forma anónima
-                    </label>
-                    <p class="text-muted small mb-0">Si activas esta opción, ocultaremos tus datos de contacto y solo usaremos la ubicación del reporte.</p>
+                    <input class="peer sr-only" type="checkbox" id="anonimoSwitch" name="anonimo" value="1" @checked(old('anonimo'))>
+                    <div class="h-6 w-11 rounded-full bg-slate-300 after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:bg-emerald-500 peer-checked:after:translate-x-5"></div>
+                </label>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Nombre de contacto</label>
+                    <input type="text" name="nombre_contacto" class="contact-field mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('nombre_contacto') border-rose-400 ring-rose-200 @enderror" placeholder="Escribe tu nombre completo" value="{{ old('nombre_contacto') }}">
+                    @error('nombre_contacto')
+                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
+                    @enderror
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">Nombre de contacto</label>
-                        <input type="text" name="nombre_contacto" class="form-control contact-field input-elevated @error('nombre_contacto') is-invalid @enderror" placeholder="Escribe tu nombre completo" value="{{ old('nombre_contacto') }}">
-                        @error('nombre_contacto')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">Teléfono de contacto (Whatsapp/Telegram)</label>
-                        <input type="number" name="telefono_contacto" class="form-control contact-field input-elevated @error('telefono_contacto') is-invalid @enderror" placeholder="10 dígitos" value="{{ old('telefono_contacto') }}">
-                        @error('telefono_contacto')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Teléfono de contacto (Whatsapp/Telegram)</label>
+                    <input type="number" name="telefono_contacto" class="contact-field mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('telefono_contacto') border-rose-400 ring-rose-200 @enderror" placeholder="10 dígitos" value="{{ old('telefono_contacto') }}">
+                    @error('telefono_contacto')
+                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
+                    @enderror
                 </div>
+            </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Facebook</label>
-                        <input type="url" name="facebook" class="form-control contact-field input-elevated" placeholder="https://facebook.com/usuario" value="{{ old('facebook') }}">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Twitter / X</label>
-                        <input type="url" name="twitter" class="form-control contact-field input-elevated" placeholder="https://x.com/usuario" value="{{ old('twitter') }}">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Instagram</label>
-                        <input type="url" name="instagram" class="form-control contact-field input-elevated" placeholder="https://instagram.com/usuario" value="{{ old('instagram') }}">
-                    </div>
+            <div class="grid gap-4 md:grid-cols-3">
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Facebook</label>
+                    <input type="url" name="facebook" class="contact-field mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="https://facebook.com/usuario" value="{{ old('facebook') }}">
                 </div>
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Twitter / X</label>
+                    <input type="url" name="twitter" class="contact-field mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="https://x.com/usuario" value="{{ old('twitter') }}">
+                </div>
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Instagram</label>
+                    <input type="url" name="instagram" class="contact-field mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200" placeholder="https://instagram.com/usuario" value="{{ old('instagram') }}">
+                </div>
+            </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">Tipo de reporte <small class="text-muted">(agua, bache, basura, etc...)</small></label>
-                        <select name="tipo_reporte_id" class="form-select input-elevated @error('tipo_reporte_id') is-invalid @enderror">
-                            <option value="" disabled {{ old('tipo_reporte_id') ? '' : 'selected' }}>Selecciona un tipo de reporte</option>
-                            @forEach($tipo_reporte as $tipo)
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Tipo de reporte <span class="text-xs font-normal text-slate-400">(agua, bache, basura, etc...)</span></label>
+                    <select name="tipo_reporte_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('tipo_reporte_id') border-rose-400 ring-rose-200 @enderror">
+                        <option value="" disabled {{ old('tipo_reporte_id') ? '' : 'selected' }}>Selecciona un tipo de reporte</option>
+                        @forEach($tipo_reporte as $tipo)
                             <option value="{{ $tipo->id }}" {{ old('tipo_reporte_id')==$tipo->id ? 'selected' : '' }}>{{ $tipo->nombre }}</option>
-                            @endForEach
-                        </select>
-                        @error('tipo_reporte_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">Estado</label>
-                        <input type="hidden" name="estado_id" value="{{ $estados->first()->id }}">
-                        <input type="text" class="form-control input-elevated" value="{{ $estados->first()->estado }}" readonly>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">Municipio</label>
-                        <select name="municipio_id" class="form-select input-elevated @error('municipio_id') is-invalid @enderror">
-                            <option value="" disabled>Selecciona un municipio</option>
-                            @forEach($municipios as $municipio)
+                        @endForEach
+                    </select>
+                    @error('tipo_reporte_id')
+                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Estado</label>
+                    <input type="hidden" name="estado_id" value="{{ $estados->first()->id }}">
+                    <input type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-500" value="{{ $estados->first()->estado }}" readonly>
+                </div>
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Municipio</label>
+                    <select name="municipio_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('municipio_id') border-rose-400 ring-rose-200 @enderror">
+                        <option value="" disabled>Selecciona un municipio</option>
+                        @forEach($municipios as $municipio)
                             <option value="{{ $municipio->id }}" {{ old('municipio_id', 47)==$municipio->id ? 'selected' : '' }}>{{ $municipio->municipio }}</option>
-                            @endForEach
-                        </select>
-                        @error('municipio_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Código Postal</label>
-                        <input type="number" name="codigo_postal" class="form-control input-elevated @error('codigo_postal') is-invalid @enderror" placeholder="Ej. 64000" value="{{ old('codigo_postal') }}" maxlength="5" pattern="\d{5}">
-                        @error('codigo_postal')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-8 mb-3">
-                        <label class="form-label fw-semibold">Colonia</label>
-                        <select name="colonia_id" class="form-select input-elevated @error('colonia_id') is-invalid @enderror">
-                            <option value="" disabled {{ old('colonia_id') ? '' : 'selected' }}>Selecciona una colonia</option>
-                        </select>
-                        @error('colonia_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                        @endForEach
+                    </select>
+                    @error('municipio_id')
+                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
+                    @enderror
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Comentario</label>
-                    <textarea name="comentario" class="form-control input-elevated" rows="3" placeholder="Describe lo sucedido...">{{ old('comentario') }}</textarea>
+                <div>
+                    <label class="text-sm font-semibold text-slate-700">Código Postal</label>
+                    <input type="number" name="codigo_postal" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('codigo_postal') border-rose-400 ring-rose-200 @enderror" placeholder="Ej. 64000" value="{{ old('codigo_postal') }}" maxlength="5" pattern="\d{5}">
+                    @error('codigo_postal')
+                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
+                    @enderror
                 </div>
+                <div class="md:col-span-2">
+                    <label class="text-sm font-semibold text-slate-700">Colonia</label>
+                    <select name="colonia_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('colonia_id') border-rose-400 ring-rose-200 @enderror">
+                        <option value="" disabled {{ old('colonia_id') ? '' : 'selected' }}>Selecciona una colonia</option>
+                    </select>
+                    @error('colonia_id')
+                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
 
-                <div class="mb-4">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <label class="form-label fw-semibold mb-0">Ubicación precisa</label>
-                        <span class="badge text-bg-light" id="location-status">Coloca el pin en la ubicación exacta</span>
+            <div>
+                <label class="text-sm font-semibold text-slate-700">Comentario</label>
+                <textarea name="comentario" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200" rows="3" placeholder="Describe lo sucedido...">{{ old('comentario') }}</textarea>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-800">Ubicación precisa</p>
+                        <p class="text-xs text-slate-500">Desliza el pin o usa geolocalización para precisión máxima.</p>
                     </div>
-                    <div class="subtle-card mb-2">
-                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                            <span class="text-muted small">Desliza el pin o usa la geolocalización para obtener latitud y longitud con máxima precisión.</span>
-                            <div class="text-md-end">
-                                <div class="small text-uppercase text-muted">Coordenadas</div>
-                                <div class="fw-bold" id="coords-display">--</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="map-container mb-3" id="map"></div>
-                    <div class="d-flex flex-column flex-md-row gap-2">
-                        <button type="button" id="open-location-modal" class="btn btn-primary w-100 py-2 fw-bold">📍 Capturar mi ubicación</button>
-                        <button type="button" id="center-marker" class="btn btn-outline-dark w-100 py-2 fw-bold">Recentrar marcador</button>
-                    </div>
-                    <small class="text-muted d-block mt-2" id="accuracy-text">Precisión no calculada aún.</small>
-
-                    <input type="hidden" id="lat" name="lat" value="{{ old('lat') }}">
-                    <input type="hidden" id="lng" name="lng" value="{{ old('lng') }}">
+                    <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm" id="location-status">Coloca el pin en la ubicación exacta</span>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Subir hasta 3 fotos</label>
-                    <input type="file" name="fotos[]" class="form-control input-elevated" multiple accept="image/*" max="3">
-                    <small class="form-text text-muted">Si el formulario falla, vuelve a seleccionar las fotos (por seguridad el navegador no repuebla archivos).</small>
+                <div class="mt-3 flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
+                    <span>Coordenadas</span>
+                    <span class="font-semibold text-slate-900" id="coords-display">--</span>
                 </div>
-
-                <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-dark px-5 py-2 fw-semibold">Enviar reporte</button>
+                <div class="mt-3 h-80 w-full overflow-hidden rounded-2xl border border-slate-200" id="map"></div>
+                <div class="mt-3 grid gap-2 md:grid-cols-2">
+                    <button type="button" id="open-location-modal" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20">📍 Capturar mi ubicación</button>
+                    <button type="button" id="center-marker" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">Recentrar marcador</button>
                 </div>
-            </form>
-        </div>
+                <p class="mt-2 text-xs text-slate-500" id="accuracy-text">Precisión no calculada aún.</p>
+                <input type="hidden" id="lat" name="lat" value="{{ old('lat') }}">
+                <input type="hidden" id="lng" name="lng" value="{{ old('lng') }}">
+            </div>
+
+            <div>
+                <label class="text-sm font-semibold text-slate-700">Subir hasta 3 fotos</label>
+                <input type="file" name="fotos[]" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm" multiple accept="image/*" max="3">
+                <p class="mt-2 text-xs text-slate-500">Si el formulario falla, vuelve a seleccionar las fotos (el navegador no repuebla archivos por seguridad).</p>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-sm font-semibold text-slate-700">Verificación reCAPTCHA</p>
+                <p class="text-xs text-slate-500">Protege el envío con reCAPTCHA de Google. Configura tu sitio y secreto en las variables de entorno.</p>
+                <div class="mt-3">
+                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="rounded-xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-600/30 transition hover:bg-sky-700">Enviar reporte</button>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- Modal para solicitar permisos de ubicación -->
-<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title" id="locationModalLabel">Permitir acceso a tu ubicación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">📍</div>
-                    <p class="mb-0 text-muted">Usaremos tu GPS solo para este reporte. Mejora la precisión y acelera la atención de tu solicitud.</p>
-                </div>
-                <ul class="text-muted small mb-0">
-                    <li>Activa el GPS para obtener coordenadas exactas.</li>
-                    <li>Si estás en interiores, acércate a una ventana para mayor precisión.</li>
-                    <li>Podrás ajustar el pin manualmente después de capturar la ubicación.</li>
-                </ul>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Ahora no</button>
-                <button type="button" id="confirm-location" class="btn btn-primary">Permitir ubicación precisa</button>
-            </div>
+<div class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/60 px-4" id="locationModal" aria-hidden="true">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="flex items-start justify-between">
+            <h5 class="text-lg font-semibold text-slate-900">Permitir acceso a tu ubicación</h5>
+            <button type="button" class="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600" data-close-modal>Cerrar</button>
+        </div>
+        <div class="mt-4 flex gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-xl text-white">📍</div>
+            <p class="text-sm text-slate-600">Usaremos tu GPS solo para este reporte. Mejora la precisión y acelera la atención de tu solicitud.</p>
+        </div>
+        <ul class="mt-4 list-disc space-y-2 pl-5 text-xs text-slate-500">
+            <li>Activa el GPS para obtener coordenadas exactas.</li>
+            <li>Si estás en interiores, acércate a una ventana para mayor precisión.</li>
+            <li>Podrás ajustar el pin manualmente después de capturar la ubicación.</li>
+        </ul>
+        <div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <button type="button" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600" data-close-modal>Ahora no</button>
+            <button type="button" id="confirm-location" class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white">Permitir ubicación precisa</button>
         </div>
     </div>
 </div>
 @endsection
 
 @section('scripts')
-<!-- Google Maps API -->
-<script src="https://maps.googleapis.com/maps/api/js?quarterly&region=MX&language=es&key=AIzaSyAcaQ7bBft6w89zoAteFbP9kaPc7kd0D3Y&libraries=places&callback=initMap" async defer></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?region=MX&language=es&key={{ config('services.google_maps.key') }}&libraries=places&callback=initMap" async defer></script>
 <script>
     let map, marker;
 
@@ -239,9 +234,10 @@
     const latInput = document.getElementById('lat');
     const lngInput = document.getElementById('lng');
     const centerButton = document.getElementById('center-marker');
-    const locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
     const modalTrigger = document.getElementById('open-location-modal');
     const confirmLocationBtn = document.getElementById('confirm-location');
+    const locationModal = document.getElementById('locationModal');
+    const closeModalButtons = document.querySelectorAll('[data-close-modal]');
 
     document.querySelector('form').addEventListener('submit', function (e) {
         const lat = latInput.value;
@@ -255,10 +251,10 @@
 
     function updateStatus(message, type = 'info') {
         const styles = {
-            info: 'badge text-bg-light',
-            success: 'badge text-bg-success',
-            warning: 'badge text-bg-warning text-dark',
-            danger: 'badge text-bg-danger'
+            info: 'rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm',
+            success: 'rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700',
+            warning: 'rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700',
+            danger: 'rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700'
         };
         locationStatus.className = styles[type] || styles.info;
         locationStatus.textContent = message;
@@ -283,11 +279,12 @@
             lat: Number.isFinite(storedLat) ? storedLat : 20.127597,
             lng: Number.isFinite(storedLng) ? storedLng : -98.731807
         };
-        map = new google.maps.Map(document.getElementById("map"), {
+        map = new google.maps.Map(document.getElementById('map'), {
             zoom: 16,
             center: center,
             streetViewControl: false,
-            mapTypeControl: false
+            mapTypeControl: false,
+            fullscreenControl: false
         });
 
         marker = new google.maps.Marker({
@@ -356,10 +353,23 @@
         }
     }
 
-    modalTrigger.addEventListener('click', () => locationModal.show());
+    function openModal() {
+        locationModal.classList.remove('hidden');
+        locationModal.classList.add('flex');
+        locationModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+        locationModal.classList.add('hidden');
+        locationModal.classList.remove('flex');
+        locationModal.setAttribute('aria-hidden', 'true');
+    }
+
+    modalTrigger.addEventListener('click', openModal);
+    closeModalButtons.forEach(button => button.addEventListener('click', closeModal));
 
     confirmLocationBtn.addEventListener('click', () => {
-        locationModal.hide();
+        closeModal();
         requestLocation();
     });
 
@@ -370,11 +380,11 @@
         fields.forEach(field => {
             if (isAnon) {
                 field.value = "";
-                field.setAttribute("disabled", "disabled");
-                field.classList.add("bg-light");
+                field.setAttribute('disabled', 'disabled');
+                field.classList.add('bg-slate-100');
             } else {
-                field.removeAttribute("disabled");
-                field.classList.remove("bg-light");
+                field.removeAttribute('disabled');
+                field.classList.remove('bg-slate-100');
             }
         });
     }
