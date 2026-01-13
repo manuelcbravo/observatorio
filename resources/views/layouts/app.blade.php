@@ -46,6 +46,24 @@
             border-radius: 1.25rem;
             box-shadow: 0 40px 80px rgba(15, 23, 42, 0.45);
         }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 0.5rem 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+        }
+
+        .lightbox-nav[disabled] {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -81,6 +99,8 @@
 
     <div class="lightbox-overlay" id="lightbox-overlay" aria-hidden="true">
         <button class="absolute right-6 top-6 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-slate-700 shadow-lg" type="button" id="lightbox-close">Cerrar</button>
+        <button class="lightbox-nav left-6" type="button" id="lightbox-prev" aria-label="Anterior">‹</button>
+        <button class="lightbox-nav right-6" type="button" id="lightbox-next" aria-label="Siguiente">›</button>
         <img src="" alt="Vista ampliada" class="lightbox-image" id="lightbox-image">
     </div>
 
@@ -107,13 +127,23 @@
         const lightboxOverlay = document.getElementById('lightbox-overlay');
         const lightboxImage = document.getElementById('lightbox-image');
         const lightboxClose = document.getElementById('lightbox-close');
+        const lightboxPrev = document.getElementById('lightbox-prev');
+        const lightboxNext = document.getElementById('lightbox-next');
 
-        const openLightbox = (src, alt) => {
+        let lightboxGallery = [];
+        let lightboxIndex = 0;
+
+        const renderLightbox = (src, alt) => {
             if (!lightboxOverlay || !lightboxImage) return;
             lightboxImage.src = src;
             lightboxImage.alt = alt || 'Vista ampliada';
             lightboxOverlay.classList.add('active');
             lightboxOverlay.setAttribute('aria-hidden', 'false');
+            if (lightboxPrev && lightboxNext) {
+                const hasGallery = lightboxGallery.length > 1;
+                lightboxPrev.style.display = hasGallery ? 'block' : 'none';
+                lightboxNext.style.display = hasGallery ? 'block' : 'none';
+            }
         };
 
         const closeLightbox = () => {
@@ -122,12 +152,27 @@
             lightboxOverlay.setAttribute('aria-hidden', 'true');
         };
 
+        const openLightbox = (src, alt, gallery = [], index = 0) => {
+            lightboxGallery = Array.isArray(gallery) ? gallery : [];
+            lightboxIndex = index;
+            const resolvedSrc = lightboxGallery[lightboxIndex] || src;
+            renderLightbox(resolvedSrc, alt);
+        };
+
+        const navigateLightbox = (direction) => {
+            if (!lightboxGallery.length) return;
+            lightboxIndex = (lightboxIndex + direction + lightboxGallery.length) % lightboxGallery.length;
+            renderLightbox(lightboxGallery[lightboxIndex], lightboxImage?.alt);
+        };
+
         document.addEventListener('click', (event) => {
             const target = event.target.closest('[data-lightbox]');
             if (!target) return;
             event.preventDefault();
             const src = target.getAttribute('data-full') || target.getAttribute('src');
-            openLightbox(src, target.getAttribute('alt'));
+            const gallery = target.getAttribute('data-gallery');
+            const index = parseInt(target.getAttribute('data-index') || '0', 10);
+            openLightbox(src, target.getAttribute('alt'), gallery ? JSON.parse(gallery) : [], index);
         });
 
         if (lightboxOverlay) {
@@ -142,9 +187,29 @@
             lightboxClose.addEventListener('click', closeLightbox);
         }
 
+        if (lightboxPrev) {
+            lightboxPrev.addEventListener('click', (event) => {
+                event.stopPropagation();
+                navigateLightbox(-1);
+            });
+        }
+
+        if (lightboxNext) {
+            lightboxNext.addEventListener('click', (event) => {
+                event.stopPropagation();
+                navigateLightbox(1);
+            });
+        }
+
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 closeLightbox();
+            }
+            if (event.key === 'ArrowLeft') {
+                navigateLightbox(-1);
+            }
+            if (event.key === 'ArrowRight') {
+                navigateLightbox(1);
             }
         });
     </script>
