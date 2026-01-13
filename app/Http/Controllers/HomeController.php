@@ -47,6 +47,7 @@ class HomeController extends Controller
                 'comentario' => 'nullable|string',
                 'lat' => 'required|numeric',
                 'lng' => 'required|numeric',
+                'fotos' => 'nullable|array|max:4',
                 'fotos.*' => 'nullable|image|max:2048',
             ];
     
@@ -184,8 +185,10 @@ class HomeController extends Controller
             ->take(6)
             ->get()
             ->map(function ($reporte) {
-                $fotoModel = $reporte->fotos->first();
-                $foto = $fotoModel ? Storage::url($fotoModel->ruta) : null;
+                $fotos = $reporte->fotos
+                    ->map(fn ($foto) => Storage::url($foto->ruta))
+                    ->values();
+                $foto = $fotos->first();
 
                 return [
                     'tipo' => $reporte->tipo_nombre ?? 'Sin clasificar',
@@ -193,9 +196,10 @@ class HomeController extends Controller
                     'estado' => $reporte->estado_nombre ?? 'Sin estado',
                     'fecha' => $reporte->created_at?->locale('es')->diffForHumans() ?? 'Sin fecha',
                     'imagen' => $foto,
+                    'imagenes' => $fotos->isNotEmpty() ? $fotos->all() : [asset('assets/img/NA.png')],
                     'lat' => $reporte->lat,
                     'lng' => $reporte->lng,
-                    'tiene_evidencia' => $foto !== null,
+                    'tiene_evidencia' => $fotos->isNotEmpty(),
                 ];
             });
 
@@ -213,14 +217,17 @@ class HomeController extends Controller
             ->take(3)
             ->get()
             ->map(function ($reporte) {
-                $fotoModel = $reporte->fotos->first();
-                $foto = $fotoModel ? Storage::url($fotoModel->ruta) : null;
+                $fotos = $reporte->fotos
+                    ->map(fn ($foto) => Storage::url($foto->ruta))
+                    ->values();
+                $foto = $fotos->first();
 
                 return [
                     'tipo' => $reporte->tipo_nombre ?? 'Sin clasificar',
                     'colonia' => $reporte->colonia_nombre ?? 'Sin colonia',
                     'fecha' => $reporte->created_at?->locale('es')->diffForHumans() ?? 'Sin fecha',
                     'imagen' => $foto,
+                    'imagenes' => $fotos->isNotEmpty() ? $fotos->all() : [asset('assets/img/NA.png')],
                 ];
             });
 
@@ -285,6 +292,8 @@ class HomeController extends Controller
 
         $graficas = [
             'tipos' => $tipos,
+            'diarias' => $this->buildDailyReportChart($now),
+            'evidencia' => $this->buildEvidenceChart($reportesTotal, $reportesConEvidencia),
         ];
 
         $ultimaActualizacion = $now->locale('es')->diffForHumans();
@@ -299,6 +308,57 @@ class HomeController extends Controller
             'graficas',
             'ultimaActualizacion'
         ));
+    }
+
+    private function buildDailyReportChart(Carbon $now)
+    {
+        $inicio = $now->copy()->subDays(6)->startOfDay();
+        $reportesPorDia = Reporte::query()
+            ->where('created_at', '>=', $inicio)
+            ->select(DB::raw('DATE(created_at) as fecha'), DB::raw('count(*) as total'))
+            ->groupBy('fecha')
+            ->orderBy('fecha')
+            ->get()
+            ->keyBy('fecha');
+
+        $series = collect();
+        for ($i = 0; $i < 7; $i++) {
+            $fecha = $inicio->copy()->addDays($i)->toDateString();
+            $total = $reportesPorDia[$fecha]->total ?? 0;
+            $series->push([
+                'fecha' => Carbon::parse($fecha)->locale('es')->isoFormat('ddd'),
+                'total' => $total,
+            ]);
+        }
+
+        $max = $series->max('total') ?: 1;
+
+        return $series->map(fn ($dia) => [
+            'label' => ucfirst($dia['fecha']),
+            'total' => $dia['total'],
+            'percent' => round(($dia['total'] / $max) * 100),
+        ]);
+    }
+
+    private function buildEvidenceChart(int $totalReportes, int $reportesConEvidencia)
+    {
+        $sinEvidencia = max($totalReportes - $reportesConEvidencia, 0);
+        $max = max($reportesConEvidencia, $sinEvidencia, 1);
+
+        return collect([
+            [
+                'label' => 'Con evidencia',
+                'total' => $reportesConEvidencia,
+                'percent' => round(($reportesConEvidencia / $max) * 100),
+                'color' => 'bg-emerald-500',
+            ],
+            [
+                'label' => 'Sin evidencia',
+                'total' => $sinEvidencia,
+                'percent' => round(($sinEvidencia / $max) * 100),
+                'color' => 'bg-slate-400',
+            ],
+        ]);
     }
 
     public function socialRedirect(string $provider)

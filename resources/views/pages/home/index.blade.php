@@ -142,7 +142,7 @@
                 </div>
                 <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Colonia</label>
-                    <select name="colonia_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('colonia_id') border-rose-400 ring-rose-200 @enderror" required>
+                    <select name="colonia_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('colonia_id') border-rose-400 ring-rose-200 @enderror" required data-selected="{{ old('colonia_id') }}">
                         <option value="" disabled {{ old('colonia_id') ? '' : 'selected' }}>Selecciona una colonia</option>
                     </select>
                     @error('colonia_id')
@@ -179,9 +179,23 @@
             </div>
 
             <div>
-                <label class="text-sm font-semibold text-slate-700">Subir hasta 3 fotos</label>
-                <input type="file" name="fotos[]" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm" multiple accept="image/*" max="3">
-                <p class="mt-2 text-xs text-slate-500">Si el formulario falla, vuelve a seleccionar las fotos (el navegador no repuebla archivos por seguridad).</p>
+                <label class="text-sm font-semibold text-slate-700">Subir hasta 4 fotos</label>
+                <div class="mt-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 text-center transition hover:border-sky-300 hover:bg-sky-50/40" id="fotos-dropzone">
+                    <input type="file" name="fotos[]" id="fotos-input" class="sr-only" multiple accept="image/*">
+                    <label for="fotos-input" class="cursor-pointer">
+                        <div class="text-sm font-semibold text-slate-700">Arrastra y suelta tus imágenes aquí</div>
+                        <div class="mt-1 text-xs text-slate-500">o haz clic para seleccionar archivos (máximo 4).</div>
+                    </label>
+                </div>
+                <div class="mt-3 grid gap-3 sm:grid-cols-4" id="fotos-preview">
+                    @for($i = 0; $i < 4; $i++)
+                        <div class="flex h-20 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white text-xs text-slate-400" data-foto-slot>
+                            Vista previa
+                        </div>
+                    @endfor
+                </div>
+                <p class="mt-2 text-xs text-slate-500" id="fotos-helper">0 de 4 imágenes seleccionadas.</p>
+                <p class="mt-1 text-xs text-slate-500">Si el formulario falla, vuelve a seleccionar las fotos (el navegador no repuebla archivos por seguridad).</p>
             </div>
 
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -399,6 +413,7 @@
     const municipioSelect = document.querySelector('select[name="municipio_id"]');
     const cpInput = document.querySelector('input[name="codigo_postal"]');
     const coloniaSelect = document.querySelector('select[name="colonia_id"]');
+    let selectedColoniaId = coloniaSelect?.dataset.selected || '';
 
     function cargarColonias() {
         const municipioId = municipioSelect.value;
@@ -412,8 +427,10 @@
                 .then(data => {
                     coloniaSelect.innerHTML = '<option value="">Selecciona una colonia</option>';
                     data.forEach(colonia => {
-                        coloniaSelect.innerHTML += `<option value="${colonia.id}">${colonia.nombre}</option>`;
+                        const selected = selectedColoniaId && String(colonia.id) === String(selectedColoniaId) ? 'selected' : '';
+                        coloniaSelect.innerHTML += `<option value="${colonia.id}" ${selected}>${colonia.nombre}</option>`;
                     });
+                    selectedColoniaId = '';
                 })
                 .catch(() => {
                     coloniaSelect.innerHTML = '<option value="">Error al cargar colonias</option>';
@@ -423,5 +440,68 @@
 
     municipioSelect.addEventListener('change', cargarColonias);
     cpInput.addEventListener('input', cargarColonias);
+
+    if (municipioSelect.value && cpInput.value.length === 5) {
+        cargarColonias();
+    }
+
+    const fotosInput = document.getElementById('fotos-input');
+    const dropzone = document.getElementById('fotos-dropzone');
+    const previewContainer = document.getElementById('fotos-preview');
+    const helperText = document.getElementById('fotos-helper');
+    const maxFotos = 4;
+
+    const updatePreviews = (files) => {
+        const slots = previewContainer.querySelectorAll('[data-foto-slot]');
+        slots.forEach((slot, index) => {
+            const file = files[index];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    slot.innerHTML = `<img src="${event.target.result}" alt="Vista previa ${index + 1}" class="h-full w-full rounded-xl object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                slot.textContent = 'Vista previa';
+                slot.classList.add('text-slate-400');
+            }
+        });
+        if (helperText) {
+            helperText.textContent = `${files.length} de ${maxFotos} imágenes seleccionadas.`;
+        }
+    };
+
+    const enforceFileLimit = (files) => {
+        const list = Array.from(files).slice(0, maxFotos);
+        const transfer = new DataTransfer();
+        list.forEach(file => transfer.items.add(file));
+        fotosInput.files = transfer.files;
+        updatePreviews(list);
+    };
+
+    if (fotosInput) {
+        fotosInput.addEventListener('change', () => {
+            enforceFileLimit(fotosInput.files);
+        });
+    }
+
+    if (dropzone) {
+        dropzone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropzone.classList.add('border-sky-400', 'bg-sky-50/60');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('border-sky-400', 'bg-sky-50/60');
+        });
+
+        dropzone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropzone.classList.remove('border-sky-400', 'bg-sky-50/60');
+            if (event.dataTransfer?.files?.length) {
+                enforceFileLimit(event.dataTransfer.files);
+            }
+        });
+    }
 </script>
 @endsection
