@@ -9,6 +9,8 @@ use App\Models\cat_estado;
 use App\Models\cat_municipio;
 use App\Models\CatTipoReporte;
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
@@ -125,151 +127,272 @@ class HomeController extends Controller
         return response()->json($colonias);
     }
 
-    public function dashboardDemo()
+    public function dashboard()
     {
+        $now = Carbon::now();
+
+        $reportesTotal = Reporte::count();
+        $reportesUltimas24 = Reporte::where('created_at', '>=', $now->copy()->subDay())->count();
+        $reportesDiaPrevio = Reporte::whereBetween('created_at', [$now->copy()->subDays(2), $now->copy()->subDay()])->count();
+        $reportesUltimos7 = Reporte::where('created_at', '>=', $now->copy()->subDays(7))->count();
+        $reportesPrevios7 = Reporte::whereBetween('created_at', [$now->copy()->subDays(14), $now->copy()->subDays(7)])->count();
+        $reportesUltimos30 = Reporte::where('created_at', '>=', $now->copy()->subDays(30))->count();
+        $reportesConEvidencia = Reporte::whereNotNull('fotos')
+            ->where('fotos', '!=', '[]')
+            ->count();
+        $municipiosActivos = Reporte::whereNotNull('municipio_id')
+            ->distinct('municipio_id')
+            ->count('municipio_id');
+        $coloniasActivas = Reporte::whereNotNull('colonia_id')
+            ->distinct('colonia_id')
+            ->count('colonia_id');
+
+        $ultimoReporte = Reporte::orderByDesc('created_at')->first();
+        $ultimoReporteLabel = $ultimoReporte?->created_at?->locale('es')->diffForHumans() ?? 'Sin reportes';
+
+        $formatDelta = function (int $actual, int $previo, string $sufijo = 'vs periodo previo'): string {
+            if ($previo === 0) {
+                return $actual > 0 ? 'Nuevo' : 'Sin variación';
+            }
+
+            $diferencia = (($actual - $previo) / $previo) * 100;
+            $signo = $diferencia >= 0 ? '+' : '';
+
+            return $signo . round($diferencia) . '% ' . $sufijo;
+        };
+
+        $porcentajeEvidencia = $reportesTotal > 0
+            ? round(($reportesConEvidencia / $reportesTotal) * 100)
+            : 0;
+
         $metricas = [
             [
-                'label' => 'Reportes capturados',
-                'value' => '248',
-                'delta' => '+12%',
+                'label' => 'Reportes totales',
+                'value' => number_format($reportesTotal),
+                'delta' => 'Últimos 7 días: ' . number_format($reportesUltimos7),
                 'accent' => 'primary',
             ],
             [
-                'label' => 'Atendidos en 72h',
-                'value' => '186',
-                'delta' => '75%',
+                'label' => 'Reportes últimas 24h',
+                'value' => number_format($reportesUltimas24),
+                'delta' => $formatDelta($reportesUltimas24, $reportesDiaPrevio, 'vs día previo'),
                 'accent' => 'success',
             ],
             [
-                'label' => 'Promedio de respuesta',
-                'value' => '14h',
-                'delta' => '-2h vs semana pasada',
+                'label' => 'Municipios activos',
+                'value' => number_format($municipiosActivos),
+                'delta' => 'Con reportes registrados',
                 'accent' => 'info',
             ],
             [
-                'label' => 'Reportes con imagen',
-                'value' => '92%',
-                'delta' => '+6%',
+                'label' => 'Reportes con evidencia',
+                'value' => number_format($reportesConEvidencia),
+                'delta' => $porcentajeEvidencia . '% del total',
                 'accent' => 'warning',
             ],
         ];
 
         $datosDuros = [
             [
-                'titulo' => 'Municipios activos',
-                'valor' => '14',
-                'detalle' => 'Cobertura estatal',
+                'titulo' => 'Colonias con reportes',
+                'valor' => number_format($coloniasActivas),
+                'detalle' => 'Cobertura actual registrada',
             ],
             [
-                'titulo' => 'Reportes verificados',
-                'valor' => '212',
-                'detalle' => 'Con evidencia geolocalizada',
+                'titulo' => 'Último reporte',
+                'valor' => $ultimoReporteLabel,
+                'detalle' => 'Actualización más reciente',
             ],
             [
-                'titulo' => 'Tiempo máx. de respuesta',
-                'valor' => '27h',
-                'detalle' => 'Últimas 72h',
+                'titulo' => 'Promedio diario (30 días)',
+                'valor' => $reportesUltimos30 > 0 ? number_format($reportesUltimos30 / 30, 1) : '0',
+                'detalle' => 'Promedio de capturas',
             ],
         ];
 
-        $reportesDestacados = [
-            [
-                'tipo' => 'Bache y pavimento',
-                'colonia' => 'Centro Histórico',
-                'estado' => 'Nuevo León',
-                'fecha' => 'Hace 2h',
-                'estatus' => 'En gestión',
-                'badge' => 'info',
-                'imagen' => 'https://images.unsplash.com/photo-1508896694512-1eade558679a?auto=format&fit=crop&w=800&q=80',
-                'lat' => '25.6866° N',
-                'lng' => '100.3161° O',
-            ],
-            [
-                'tipo' => 'Alumbrado público',
-                'colonia' => 'San Nicolás',
-                'estado' => 'Nuevo León',
-                'fecha' => 'Hace 5h',
-                'estatus' => 'Enviado a cuadrilla',
-                'badge' => 'success',
-                'imagen' => 'https://images.unsplash.com/photo-1504595403659-9088ce801e29?auto=format&fit=crop&w=800&q=80',
-                'lat' => '25.7497° N',
-                'lng' => '100.2895° O',
-            ],
-            [
-                'tipo' => 'Basura y escombro',
-                'colonia' => 'Obispado',
-                'estado' => 'Nuevo León',
-                'fecha' => 'Ayer',
-                'estatus' => 'Cerrado',
-                'badge' => 'secondary',
-                'imagen' => 'https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?auto=format&fit=crop&w=800&q=80',
-                'lat' => '25.6751° N',
-                'lng' => '100.3451° O',
-            ],
-        ];
+        $reportesDestacados = Reporte::query()
+            ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
+            ->leftJoin('cat_colonias', 'reportes.colonia_id', '=', 'cat_colonias.id')
+            ->leftJoin('cat_estados', 'reportes.estado_id', '=', 'cat_estados.id')
+            ->select(
+                'reportes.*',
+                'cat_tipo_reportes.nombre as tipo_nombre',
+                'cat_colonias.nombre as colonia_nombre',
+                'cat_estados.estado as estado_nombre'
+            )
+            ->orderByDesc('reportes.created_at')
+            ->take(6)
+            ->get()
+            ->map(function ($reporte) {
+                $foto = null;
+                if (is_array($reporte->fotos) && count($reporte->fotos) > 0) {
+                    $foto = Storage::url($reporte->fotos[0]);
+                }
 
-        $heatmap = [
-            ['label' => 'Centro', 'valor' => 76],
-            ['label' => 'San Pedro', 'valor' => 42],
-            ['label' => 'Guadalupe', 'valor' => 58],
-            ['label' => 'Apodaca', 'valor' => 33],
-        ];
+                return [
+                    'tipo' => $reporte->tipo_nombre ?? 'Sin clasificar',
+                    'colonia' => $reporte->colonia_nombre ?? 'Sin colonia',
+                    'estado' => $reporte->estado_nombre ?? 'Sin estado',
+                    'fecha' => $reporte->created_at?->locale('es')->diffForHumans() ?? 'Sin fecha',
+                    'imagen' => $foto,
+                    'lat' => $reporte->lat,
+                    'lng' => $reporte->lng,
+                    'tiene_evidencia' => $foto !== null,
+                ];
+            });
 
-        $mapaPuntos = [
-            [
-                'lat' => '25.6866° N',
-                'lng' => '100.3161° O',
-                'estatus' => 'En gestión',
-                'reporte' => 'Bache profundo',
-                'intensidad' => 0.82,
-            ],
-            [
-                'lat' => '25.7497° N',
-                'lng' => '100.2895° O',
-                'estatus' => 'Cuadrilla en sitio',
-                'reporte' => 'Falla de alumbrado',
-                'intensidad' => 0.64,
-            ],
-            [
-                'lat' => '25.6751° N',
-                'lng' => '100.3451° O',
-                'estatus' => 'Cerrado',
-                'reporte' => 'Retiro de escombro',
-                'intensidad' => 0.48,
-            ],
-            [
-                'lat' => '25.8100° N',
-                'lng' => '100.2630° O',
-                'estatus' => 'Programado',
-                'reporte' => 'Señalética dañada',
-                'intensidad' => 0.36,
-            ],
-        ];
+        $reportesEvidencia = Reporte::query()
+            ->whereNotNull('fotos')
+            ->where('fotos', '!=', '[]')
+            ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
+            ->leftJoin('cat_colonias', 'reportes.colonia_id', '=', 'cat_colonias.id')
+            ->select(
+                'reportes.*',
+                'cat_tipo_reportes.nombre as tipo_nombre',
+                'cat_colonias.nombre as colonia_nombre'
+            )
+            ->orderByDesc('reportes.created_at')
+            ->take(3)
+            ->get()
+            ->map(function ($reporte) {
+                $foto = null;
+                if (is_array($reporte->fotos) && count($reporte->fotos) > 0) {
+                    $foto = Storage::url($reporte->fotos[0]);
+                }
+
+                return [
+                    'tipo' => $reporte->tipo_nombre ?? 'Sin clasificar',
+                    'colonia' => $reporte->colonia_nombre ?? 'Sin colonia',
+                    'fecha' => $reporte->created_at?->locale('es')->diffForHumans() ?? 'Sin fecha',
+                    'imagen' => $foto,
+                ];
+            });
+
+        $mapaPuntos = Reporte::query()
+            ->whereNotNull('lat')
+            ->whereNotNull('lng')
+            ->where('created_at', '>=', $now->copy()->subDays(30))
+            ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
+            ->select('reportes.*', 'cat_tipo_reportes.nombre as tipo_nombre')
+            ->orderByDesc('reportes.created_at')
+            ->take(60)
+            ->get()
+            ->map(function ($reporte) use ($now) {
+                $dias = $reporte->created_at ? $reporte->created_at->diffInDays($now) : 30;
+                $intensidad = max(0.35, 1 - min($dias / 30, 1));
+
+                return [
+                    'lat' => (float) $reporte->lat,
+                    'lng' => (float) $reporte->lng,
+                    'reporte' => $reporte->tipo_nombre ?? 'Reporte ciudadano',
+                    'comentario' => $reporte->comentario,
+                    'intensidad' => $intensidad,
+                ];
+            });
+
+        $heatmapRaw = Reporte::query()
+            ->leftJoin('cat_municipios', 'reportes.municipio_id', '=', 'cat_municipios.id')
+            ->select('cat_municipios.municipio as label', DB::raw('count(*) as total'))
+            ->whereNotNull('reportes.municipio_id')
+            ->groupBy('cat_municipios.municipio')
+            ->orderByDesc('total')
+            ->take(4)
+            ->get();
+
+        $heatmap = $heatmapRaw->map(function ($registro) use ($reportesTotal) {
+            $porcentaje = $reportesTotal > 0 ? round(($registro->total / $reportesTotal) * 100) : 0;
+
+            return [
+                'label' => $registro->label ?? 'Sin municipio',
+                'valor' => $porcentaje,
+                'total' => $registro->total,
+            ];
+        });
+
+        $tiposRaw = Reporte::query()
+            ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
+            ->select('cat_tipo_reportes.nombre as label', DB::raw('count(*) as total'))
+            ->whereNotNull('reportes.tipo_reporte_id')
+            ->groupBy('cat_tipo_reportes.nombre')
+            ->orderByDesc('total')
+            ->take(4)
+            ->get();
+
+        $tiposMax = $tiposRaw->max('total') ?: 1;
+        $tipos = $tiposRaw->map(function ($registro) use ($tiposMax) {
+            return [
+                'label' => $registro->label ?? 'Sin clasificar',
+                'total' => $registro->total,
+                'percent' => round(($registro->total / $tiposMax) * 100),
+            ];
+        });
+
+        $municipiosRaw = Reporte::query()
+            ->leftJoin('cat_municipios', 'reportes.municipio_id', '=', 'cat_municipios.id')
+            ->select('cat_municipios.municipio as label', DB::raw('count(*) as total'))
+            ->whereNotNull('reportes.municipio_id')
+            ->groupBy('cat_municipios.municipio')
+            ->orderByDesc('total')
+            ->take(4)
+            ->get();
+
+        $municipiosMax = $municipiosRaw->max('total') ?: 1;
+        $municipios = $municipiosRaw->map(function ($registro) use ($municipiosMax) {
+            return [
+                'label' => $registro->label ?? 'Sin municipio',
+                'total' => $registro->total,
+                'percent' => round(($registro->total / $municipiosMax) * 100),
+            ];
+        });
+
+        $inicioSemana = $now->copy()->subDays(6)->startOfDay();
+        $conteosPorDia = Reporte::query()
+            ->select(DB::raw('DATE(created_at) as fecha'), DB::raw('count(*) as total'))
+            ->where('created_at', '>=', $inicioSemana)
+            ->groupBy('fecha')
+            ->pluck('total', 'fecha');
+
+        $diaLabels = [1 => 'L', 2 => 'M', 3 => 'X', 4 => 'J', 5 => 'V', 6 => 'S', 7 => 'D'];
+        $tendenciaRaw = [];
+        $maxDia = 0;
+
+        for ($i = 0; $i < 7; $i++) {
+            $fecha = $inicioSemana->copy()->addDays($i);
+            $total = (int) ($conteosPorDia[$fecha->toDateString()] ?? 0);
+            $maxDia = max($maxDia, $total);
+
+            $tendenciaRaw[] = [
+                'label' => $diaLabels[$fecha->dayOfWeekIso] ?? $fecha->format('D'),
+                'total' => $total,
+            ];
+        }
+
+        $maxDia = $maxDia ?: 1;
+        $tendencia = collect($tendenciaRaw)->map(function ($dia) use ($maxDia) {
+            return [
+                'label' => $dia['label'],
+                'total' => $dia['total'],
+                'percent' => round(($dia['total'] / $maxDia) * 100),
+            ];
+        });
 
         $graficas = [
-            'tipos' => [
-                ['label' => 'Bache y pavimento', 'valor' => 68],
-                ['label' => 'Alumbrado público', 'valor' => 54],
-                ['label' => 'Basura y escombro', 'valor' => 37],
-                ['label' => 'Seguridad', 'valor' => 29],
-            ],
-            'municipios' => [
-                ['label' => 'Monterrey', 'valor' => 82],
-                ['label' => 'San Nicolás', 'valor' => 61],
-                ['label' => 'Guadalupe', 'valor' => 57],
-                ['label' => 'Santa Catarina', 'valor' => 39],
-            ],
-            'tendencia' => [
-                ['label' => 'L', 'valor' => 18],
-                ['label' => 'M', 'valor' => 32],
-                ['label' => 'X', 'valor' => 44],
-                ['label' => 'J', 'valor' => 27],
-                ['label' => 'V', 'valor' => 36],
-                ['label' => 'S', 'valor' => 21],
-                ['label' => 'D', 'valor' => 14],
-            ],
+            'tipos' => $tipos,
+            'municipios' => $municipios,
+            'tendencia' => $tendencia,
         ];
 
-        return view('pages.dashboard.demo', compact('metricas', 'datosDuros', 'reportesDestacados', 'heatmap', 'mapaPuntos', 'graficas'));
+        $ultimaActualizacion = $now->locale('es')->diffForHumans();
+
+        return view('pages.dashboard.index', compact(
+            'metricas',
+            'datosDuros',
+            'reportesDestacados',
+            'reportesEvidencia',
+            'heatmap',
+            'mapaPuntos',
+            'graficas',
+            'ultimaActualizacion'
+        ));
     }
 }

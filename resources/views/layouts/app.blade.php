@@ -123,7 +123,7 @@
                             <a class="nav-link fw-semibold text-dark" href="{{ url('/') }}#reportes">Reportes</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold text-dark" href="{{ route('dashboard.demo') }}">Tablero demo</a>
+                            <a class="nav-link fw-semibold text-dark" href="{{ route('dashboard') }}">Tablero</a>
                         </li>
                         <li class="nav-item ms-lg-2">
                             <span class="badge rounded-pill text-uppercase">Beta pública</span>
