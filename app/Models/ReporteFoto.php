@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReporteFoto extends Model
 {
+    protected $table = 'reportes_fotos';
+
     protected $fillable = [
         'reporte_id',
         'ruta',
