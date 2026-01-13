@@ -19,8 +19,8 @@
         }
 
         .brand-logo {
-            width: 44px;
-            height: 44px;
+            width: 80px;
+            height: 80px;
             object-fit: contain;
         }
 
@@ -65,7 +65,6 @@
             <div class="hidden items-center gap-6 text-sm font-semibold text-slate-700 md:flex" id="main-nav">
                 <a class="transition hover:text-sky-600" href="{{ url('/') }}">Inicio</a>
                 <a class="transition hover:text-sky-600" href="{{ route('dashboard') }}">Tablero</a>
-                <span class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold uppercase text-sky-700">Beta pública</span>
             </div>
         </nav>
     </header>

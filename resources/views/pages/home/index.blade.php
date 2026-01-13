@@ -8,10 +8,6 @@
             <h3 class="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">Levantar reporte ciudadano</h3>
             <p class="mt-2 text-sm text-slate-500">Comparte tu reporte con la mayor precisión posible. Tus datos de contacto son opcionales y puedes enviar de forma anónima.</p>
         </div>
-        <div class="rounded-2xl border border-dashed border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
-            <div class="font-semibold">UX mejorada</div>
-            <div class="text-xs text-sky-600">Captura guiada y geolocalización precisa</div>
-        </div>
     </div>
 
     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
@@ -106,7 +102,7 @@
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Tipo de reporte <span class="text-xs font-normal text-slate-400">(agua, bache, basura, etc...)</span></label>
-                    <select name="tipo_reporte_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('tipo_reporte_id') border-rose-400 ring-rose-200 @enderror">
+                    <select name="tipo_reporte_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('tipo_reporte_id') border-rose-400 ring-rose-200 @enderror" required>
                         <option value="" disabled {{ old('tipo_reporte_id') ? '' : 'selected' }}>Selecciona un tipo de reporte</option>
                         @forEach($tipo_reporte as $tipo)
                             <option value="{{ $tipo->id }}" {{ old('tipo_reporte_id')==$tipo->id ? 'selected' : '' }}>{{ $tipo->nombre }}</option>
@@ -134,15 +130,19 @@
                     @enderror
                 </div>
                 <div>
-                    <label class="text-sm font-semibold text-slate-700">Código Postal</label>
-                    <input type="number" name="codigo_postal" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('codigo_postal') border-rose-400 ring-rose-200 @enderror" placeholder="Ej. 64000" value="{{ old('codigo_postal') }}" maxlength="5" pattern="\d{5}">
+                    <label class="text-sm font-semibold text-slate-700">Código Postal <small class="text-muted"> (El código postal carga las colonias) </small></label>
+                    <input type="number" name="codigo_postal" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('codigo_postal') border-rose-400 ring-rose-200 @enderror" placeholder="Ej. 64000" value="{{ old('codigo_postal') }}"  required
+                    maxlength="5"
+                    pattern="[0-9]{5}"
+                    inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,5);">
                     @error('codigo_postal')
                         <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
                     @enderror
                 </div>
                 <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Colonia</label>
-                    <select name="colonia_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('colonia_id') border-rose-400 ring-rose-200 @enderror">
+                    <select name="colonia_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200 @error('colonia_id') border-rose-400 ring-rose-200 @enderror" required>
                         <option value="" disabled {{ old('colonia_id') ? '' : 'selected' }}>Selecciona una colonia</option>
                     </select>
                     @error('colonia_id')

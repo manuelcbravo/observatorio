@@ -29,17 +29,6 @@ class HomeController extends Controller
         );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         try {
@@ -50,7 +39,7 @@ class HomeController extends Controller
                 'twitter' => 'nullable|url',
                 'instagram' => 'nullable|url',
                 'anonimo' => 'boolean',
-                'tipo_reporte_id' => 'nullable|integer',
+                'tipo_reporte_id' => 'required|integer',
                 'estado_id' => 'required|integer',
                 'municipio_id' => 'required|integer',
                 'codigo_postal' => 'required|digits:5', 
