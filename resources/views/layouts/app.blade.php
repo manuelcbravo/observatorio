@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Observatorio Ciudadano</title>
+    <title>{{ env('APP_NAME') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -32,6 +32,12 @@
 
         header .navbar-brand {
             letter-spacing: 0.4px;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
         }
 
         header .badge {
@@ -99,11 +105,9 @@
             <div class="container">
                 <!-- Logo -->
                 <a class="navbar-brand d-flex align-items-center fw-bold text-dark" href="#">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-dark text-white me-2" style="width: 44px; height: 44px;">
-                        OC
-                    </div>
+                    <img src="{{ asset('assets/img/logos/logo.png') }}" alt="{{ env('APP_NAME') }} logo" class="brand-logo me-2">
                     <div>
-                        <div>Observatorio Ciudadano</div>
+                        <div>{{ env('APP_NAME') }}</div>
                         <small class="text-muted fw-medium">Reportes cívicos en tiempo real</small>
                     </div>
                 </a>
@@ -139,7 +143,7 @@
     <!-- Footer -->
     <footer>
         <div class="container">
-            &copy; {{ date('Y') }} Observatorio Ciudadano. Todos los derechos reservados.
+            &copy; {{ date('Y') }} {{ env('APP_NAME') }}. Todos los derechos reservados.
         </div>
     </footer>
 

@@ -21,11 +21,34 @@ class Reporte extends Model
         'comentario',
         'lat',
         'lng',
-        'fotos',
     ];
 
     protected $casts = [
         'anonimo' => 'boolean',
-        'fotos' => 'array',
     ];
+
+    public function tipoReporte()
+    {
+        return $this->belongsTo(CatTipoReporte::class, 'tipo_reporte_id');
+    }
+
+    public function estado()
+    {
+        return $this->belongsTo(cat_estado::class, 'estado_id');
+    }
+
+    public function municipio()
+    {
+        return $this->belongsTo(cat_municipio::class, 'municipio_id');
+    }
+
+    public function colonia()
+    {
+        return $this->belongsTo(cat_colonia::class, 'colonia_id');
+    }
+
+    public function fotos()
+    {
+        return $this->hasMany(ReporteFoto::class, 'reporte_id');
+    }
 }
