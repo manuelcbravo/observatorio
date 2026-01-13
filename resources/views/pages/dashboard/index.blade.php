@@ -215,7 +215,7 @@
         </div>
 
         <div class="row g-4 mt-1">
-            <div class="col-12 col-lg-4">
+            <div class="col-12">
                 <div class="form-card h-100">
                     <p class="text-uppercase text-muted fw-semibold small mb-1">Tipos de eventualidad</p>
                     <h5 class="fw-bold mb-3">Distribución por tipo</h5>
@@ -235,46 +235,6 @@
                             <div class="text-muted">Sin reportes registrados.</div>
                         @endif
                     </div>
-                </div>
-            </div>
-            <div class="col-12 col-lg-4">
-                <div class="form-card h-100">
-                    <p class="text-uppercase text-muted fw-semibold small mb-1">Municipios con más reportes</p>
-                    <h5 class="fw-bold mb-3">Concentración</h5>
-                    <div class="d-flex flex-column gap-3">
-                        @foreach($graficas['municipios'] as $municipio)
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="rounded-circle" style="width: 12px; height: 12px; background: linear-gradient(135deg, #0ea5e9, #0f766e);"></div>
-                                    <span class="fw-semibold">{{ $municipio['label'] }}</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="progress" style="width: 120px; height: 8px;">
-                                        <div class="progress-bar bg-success" style="width: {{ $municipio['percent'] }}%"></div>
-                                    </div>
-                                    <span class="fw-bold">{{ $municipio['percent'] }}%</span>
-                                </div>
-                            </div>
-                        @endforeach
-                        @if($graficas['municipios']->isEmpty())
-                            <div class="text-muted">Sin datos para mostrar.</div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-lg-4">
-                <div class="form-card h-100">
-                    <p class="text-uppercase text-muted fw-semibold small mb-1">Tendencia semanal</p>
-                    <h5 class="fw-bold mb-3">Volumen diario</h5>
-                    <div class="d-flex align-items-end gap-2" style="height: 180px;">
-                        @foreach($graficas['tendencia'] as $dia)
-                            <div class="flex-grow-1 text-center">
-                                <div class="rounded-top-4 bg-primary bg-opacity-75 mx-auto" style="height: calc({{ $dia['percent'] }}% * 1.4); max-height: 140px;"></div>
-                                <small class="d-block mt-2 text-muted fw-semibold">{{ $dia['label'] }}</small>
-                            </div>
-                        @endforeach
-                    </div>
-                    <p class="small text-muted mb-0">Comparativo del volumen de reportes en los últimos siete días.</p>
                 </div>
             </div>
         </div>

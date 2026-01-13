@@ -76,9 +76,13 @@ class HomeController extends Controller
                     $fotos[] = $path;
                 }
             }
-            $data['fotos'] = $fotos;
     
-            Reporte::create($data);
+            $reporte = Reporte::create($data);
+            if (!empty($fotos)) {
+                $reporte->fotos()->createMany(
+                    collect($fotos)->map(fn ($ruta) => ['ruta' => $ruta])->all()
+                );
+            }
     
             return redirect()->back()->with('success', 'Reporte enviado con éxito.');
         } catch (\Throwable $th) {
@@ -105,8 +109,7 @@ class HomeController extends Controller
         $reportesUltimos7 = Reporte::where('created_at', '>=', $now->copy()->subDays(7))->count();
         $reportesPrevios7 = Reporte::whereBetween('created_at', [$now->copy()->subDays(14), $now->copy()->subDays(7)])->count();
         $reportesUltimos30 = Reporte::where('created_at', '>=', $now->copy()->subDays(30))->count();
-        $reportesConEvidencia = Reporte::whereNotNull('fotos')
-            ->count();
+        $reportesConEvidencia = Reporte::whereHas('fotos')->count();
         $municipiosActivos = Reporte::whereNotNull('municipio_id')
             ->distinct('municipio_id')
             ->count('municipio_id');
@@ -178,6 +181,7 @@ class HomeController extends Controller
         ];
 
         $reportesDestacados = Reporte::query()
+            ->with('fotos')
             ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
             ->leftJoin('cat_colonias', 'reportes.colonia_id', '=', 'cat_colonias.id')
             ->leftJoin('cat_estados', 'reportes.estado_id', '=', 'cat_estados.id')
@@ -191,10 +195,8 @@ class HomeController extends Controller
             ->take(6)
             ->get()
             ->map(function ($reporte) {
-                $foto = null;
-                if (is_array($reporte->fotos) && count($reporte->fotos) > 0) {
-                    $foto = Storage::url($reporte->fotos[0]);
-                }
+                $fotoModel = $reporte->fotos->first();
+                $foto = $fotoModel ? Storage::url($fotoModel->ruta) : null;
 
                 return [
                     'tipo' => $reporte->tipo_nombre ?? 'Sin clasificar',
@@ -209,7 +211,8 @@ class HomeController extends Controller
             });
 
         $reportesEvidencia = Reporte::query()
-            ->whereNotNull('fotos')
+            ->whereHas('fotos')
+            ->with('fotos')
             ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
             ->leftJoin('cat_colonias', 'reportes.colonia_id', '=', 'cat_colonias.id')
             ->select(
@@ -221,10 +224,8 @@ class HomeController extends Controller
             ->take(3)
             ->get()
             ->map(function ($reporte) {
-                $foto = null;
-                if (is_array($reporte->fotos) && count($reporte->fotos) > 0) {
-                    $foto = Storage::url($reporte->fotos[0]);
-                }
+                $fotoModel = $reporte->fotos->first();
+                $foto = $fotoModel ? Storage::url($fotoModel->ruta) : null;
 
                 return [
                     'tipo' => $reporte->tipo_nombre ?? 'Sin clasificar',
@@ -293,59 +294,8 @@ class HomeController extends Controller
             ];
         });
 
-        $municipiosRaw = Reporte::query()
-            ->leftJoin('cat_municipios', 'reportes.municipio_id', '=', 'cat_municipios.id')
-            ->select('cat_municipios.municipio as label', DB::raw('count(*) as total'))
-            ->whereNotNull('reportes.municipio_id')
-            ->groupBy('cat_municipios.municipio')
-            ->orderByDesc('total')
-            ->take(4)
-            ->get();
-
-        $municipiosMax = $municipiosRaw->max('total') ?: 1;
-        $municipios = $municipiosRaw->map(function ($registro) use ($municipiosMax) {
-            return [
-                'label' => $registro->label ?? 'Sin municipio',
-                'total' => $registro->total,
-                'percent' => round(($registro->total / $municipiosMax) * 100),
-            ];
-        });
-
-        $inicioSemana = $now->copy()->subDays(6)->startOfDay();
-        $conteosPorDia = Reporte::query()
-            ->select(DB::raw('DATE(created_at) as fecha'), DB::raw('count(*) as total'))
-            ->where('created_at', '>=', $inicioSemana)
-            ->groupBy('fecha')
-            ->pluck('total', 'fecha');
-
-        $diaLabels = [1 => 'L', 2 => 'M', 3 => 'X', 4 => 'J', 5 => 'V', 6 => 'S', 7 => 'D'];
-        $tendenciaRaw = [];
-        $maxDia = 0;
-
-        for ($i = 0; $i < 7; $i++) {
-            $fecha = $inicioSemana->copy()->addDays($i);
-            $total = (int) ($conteosPorDia[$fecha->toDateString()] ?? 0);
-            $maxDia = max($maxDia, $total);
-
-            $tendenciaRaw[] = [
-                'label' => $diaLabels[$fecha->dayOfWeekIso] ?? $fecha->format('D'),
-                'total' => $total,
-            ];
-        }
-
-        $maxDia = $maxDia ?: 1;
-        $tendencia = collect($tendenciaRaw)->map(function ($dia) use ($maxDia) {
-            return [
-                'label' => $dia['label'],
-                'total' => $dia['total'],
-                'percent' => round(($dia['total'] / $maxDia) * 100),
-            ];
-        });
-
         $graficas = [
             'tipos' => $tipos,
-            'municipios' => $municipios,
-            'tendencia' => $tendencia,
         ];
 
         $ultimaActualizacion = $now->locale('es')->diffForHumans();

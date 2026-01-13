@@ -18,4 +18,9 @@ class cat_colonia extends Model
         'nombre',
         'tipo',
     ];
+
+    public function reportes()
+    {
+        return $this->hasMany(Reporte::class, 'colonia_id');
+    }
 }
