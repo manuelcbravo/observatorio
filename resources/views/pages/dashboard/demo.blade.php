@@ -82,6 +82,26 @@
             </div>
         </div>
 
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+        <style>
+            .dashboard-map-shell {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 20px;
+                overflow: hidden;
+            }
+
+            .dashboard-map-header {
+                background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(15, 118, 110, 0.12));
+                border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+            }
+
+            #heatmap-map {
+                height: 280px;
+                width: 100%;
+            }
+        </style>
+
         <div class="row g-4 align-items-stretch">
             <div class="col-12 col-lg-6">
                 <div class="form-card h-100" style="background: linear-gradient(135deg, rgba(14,165,233,.08), rgba(15,118,110,.1));">
@@ -92,26 +112,32 @@
                         </div>
                         <span class="badge-soft rounded-pill px-3 py-2 fw-semibold">Demo</span>
                     </div>
-                    <p class="text-muted">Usa esta plantilla para conectar con tu API y mostrar densidad de reportes. Incluye controles para rango de fechas y tipo de incidencia.</p>
-                    <div class="bg-dark bg-opacity-75 rounded-4 position-relative overflow-hidden" style="height: 260px; background: radial-gradient(circle at 20% 30%, rgba(56,189,248,.25), transparent 35%), radial-gradient(circle at 80% 70%, rgba(16,185,129,.25), transparent 30%), #0f172a;">
-                        <div class="position-absolute top-0 bottom-0 start-0 end-0" style="background-image: url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/-100.3161,25.6866,11.5,0/800x600?access_token=pk.eyJ1IjoiZGVtb3VzZXIiLCJhIjoiY2ttcWx2aGd0MGgycTJvcXVxdWdqa2VqZCJ9.dummy'); opacity: .12; background-size: cover;"></div>
-                        @foreach($mapaPuntos as $index => $punto)
-                            @php
-                                $left = 10 + ($index * 18);
-                                $top = 12 + ($index * 15);
-                            @endphp
-                            <div class="position-absolute" style="left: calc({{ $left }}% - 10px); top: calc({{ $top }}% - 10px);">
-                                <div class="rounded-circle border border-2 border-white shadow" style="width: 18px; height: 18px; background: linear-gradient(135deg, #0ea5e9, #0f766e); opacity: {{ $punto['intensidad'] }};"></div>
-                                <div class="bg-white text-dark rounded-4 px-3 py-2 mt-2 shadow-sm" style="min-width: 190px;">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-primary bg-opacity-25 text-primary">{{ $punto['estatus'] }}</span>
-                                        <span class="small text-muted">{{ $punto['lat'] }}</span>
-                                    </div>
-                                    <div class="fw-semibold">{{ $punto['reporte'] }}</div>
-                                    <div class="small text-muted">Lng {{ $punto['lng'] }}</div>
+                    <p class="text-muted">Mapa operativo con base libre de uso para monitorear concentración de reportes, zonas críticas y estados activos.</p>
+                    <div class="dashboard-map-shell">
+                        <div class="dashboard-map-header px-3 py-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge text-bg-primary">Mapa en vivo</span>
+                                <span class="small text-muted">Cobertura urbana · Últimas 24h</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success bg-opacity-25 text-success">Alta densidad</span>
+                                <span class="badge bg-warning bg-opacity-25 text-warning">Media</span>
+                                <span class="badge bg-secondary bg-opacity-25 text-secondary">Baja</span>
+                            </div>
+                        </div>
+                        <div id="heatmap-map"></div>
+                        <div class="px-3 py-3 bg-white border-top">
+                            <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-semibold">Áreas con mayor fricción</div>
+                                    <div class="small text-muted">Clic en cada punto para ver lat/lng, estatus y descripción.</div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small text-muted">Última actualización:</span>
+                                    <span class="badge bg-light text-dark">Hace 2 min</span>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         @foreach($heatmap as $punto)
@@ -265,4 +291,63 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapElement = document.getElementById('heatmap-map');
+            if (!mapElement) {
+                return;
+            }
+
+            const puntos = @json($mapaPuntos);
+            const map = L.map(mapElement, { zoomControl: false, scrollWheelZoom: false }).setView([25.6866, -100.3161], 12);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            const bounds = [];
+
+            puntos.forEach((punto) => {
+                const lat = parseFloat(punto.lat);
+                const lng = parseFloat(punto.lng);
+
+                if (Number.isNaN(lat) || Number.isNaN(lng)) {
+                    return;
+                }
+
+                const intensidad = Number(punto.intensidad) || 0.6;
+                const color = intensidad >= 0.75 ? '#0ea5e9' : intensidad >= 0.5 ? '#10b981' : '#94a3b8';
+
+                const marker = L.circleMarker([lat, lng], {
+                    radius: 10,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: color,
+                    fillOpacity: Math.min(Math.max(intensidad, 0.35), 0.9)
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <div style="min-width: 180px;">
+                        <div class="fw-semibold mb-1">${punto.reporte}</div>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>${punto.estatus}</span>
+                            <span>${punto.lat}, ${punto.lng}</span>
+                        </div>
+                        <div class="small text-muted">Intensidad estimada: ${(intensidad * 100).toFixed(0)}%</div>
+                    </div>
+                `);
+
+                bounds.push([lat, lng]);
+            });
+
+            if (bounds.length) {
+                map.fitBounds(bounds, { padding: [30, 30] });
+            }
+        });
+    </script>
 @endsection
