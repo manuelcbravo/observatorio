@@ -86,38 +86,6 @@ class HomeController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
     public function getColonias($municipioId, $cp)
     {
         $colonias = cat_colonia::where('id_municipio', $municipioId)
@@ -138,7 +106,6 @@ class HomeController extends Controller
         $reportesPrevios7 = Reporte::whereBetween('created_at', [$now->copy()->subDays(14), $now->copy()->subDays(7)])->count();
         $reportesUltimos30 = Reporte::where('created_at', '>=', $now->copy()->subDays(30))->count();
         $reportesConEvidencia = Reporte::whereNotNull('fotos')
-            ->where('fotos', '!=', '[]')
             ->count();
         $municipiosActivos = Reporte::whereNotNull('municipio_id')
             ->distinct('municipio_id')
@@ -243,7 +210,6 @@ class HomeController extends Controller
 
         $reportesEvidencia = Reporte::query()
             ->whereNotNull('fotos')
-            ->where('fotos', '!=', '[]')
             ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
             ->leftJoin('cat_colonias', 'reportes.colonia_id', '=', 'cat_colonias.id')
             ->select(
@@ -271,7 +237,7 @@ class HomeController extends Controller
         $mapaPuntos = Reporte::query()
             ->whereNotNull('lat')
             ->whereNotNull('lng')
-            ->where('created_at', '>=', $now->copy()->subDays(30))
+            ->where('reportes.created_at', '>=', $now->copy()->subDays(30))
             ->leftJoin('cat_tipo_reportes', 'reportes.tipo_reporte_id', '=', 'cat_tipo_reportes.id')
             ->select('reportes.*', 'cat_tipo_reportes.nombre as tipo_nombre')
             ->orderByDesc('reportes.created_at')

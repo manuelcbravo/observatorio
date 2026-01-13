@@ -120,9 +120,6 @@
                             <a class="nav-link fw-semibold text-dark" href="{{ url('/') }}">Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold text-dark" href="{{ url('/') }}#reportes">Reportes</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link fw-semibold text-dark" href="{{ route('dashboard') }}">Tablero</a>
                         </li>
                         <li class="nav-item ms-lg-2">

@@ -128,7 +128,7 @@
                         <select name="municipio_id" class="form-select input-elevated @error('municipio_id') is-invalid @enderror">
                             <option value="" disabled>Selecciona un municipio</option>
                             @forEach($municipios as $municipio)
-                            <option value="{{ $municipio->id }}" {{ old('municipio_id', 48)==$municipio->id ? 'selected' : '' }}>{{ $municipio->municipio }}</option>
+                            <option value="{{ $municipio->id }}" {{ old('municipio_id', 47)==$municipio->id ? 'selected' : '' }}>{{ $municipio->municipio }}</option>
                             @endForEach
                         </select>
                         @error('municipio_id')
