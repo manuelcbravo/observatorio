@@ -20,7 +20,8 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('pages.home.index',
+        return view(
+            'pages.home.index',
             [
                 'estados' => cat_estado::where('id', 13)->orderBy('estado', 'asc')->get(),
                 'municipios' => cat_municipio::where('id_estado', 13)->orderBy('municipio', 'asc')->get(),
@@ -42,7 +43,7 @@ class HomeController extends Controller
                 'tipo_reporte_id' => 'required|integer',
                 'estado_id' => 'required|integer',
                 'municipio_id' => 'required|integer',
-                'codigo_postal' => 'required|digits:5', 
+                'codigo_postal' => 'required|digits:5',
                 'colonia_id' => 'required|integer',
                 'comentario' => 'nullable|string',
                 'lat' => 'required|numeric',
@@ -50,14 +51,14 @@ class HomeController extends Controller
                 'fotos' => 'nullable|array|max:4',
                 'fotos.*' => 'nullable|image|max:2048',
             ];
-    
+
             if (!($request->has('anonimo') && $request->input('anonimo') == '1')) {
                 $rules['nombre_contacto'] = 'required|string|max:255';
                 $rules['telefono_contacto'] = 'required|string|max:20';
             }
 
             $data = $request->validate($rules);
-    
+
             // Subir fotos
             $fotos = [];
             if ($request->hasFile('fotos')) {
@@ -66,14 +67,14 @@ class HomeController extends Controller
                     $fotos[] = $path;
                 }
             }
-    
+
             $reporte = Reporte::create($data);
             if (!empty($fotos)) {
                 $reporte->fotos()->createMany(
-                    collect($fotos)->map(fn ($ruta) => ['ruta' => $ruta])->all()
+                    collect($fotos)->map(fn($ruta) => ['ruta' => $ruta])->all()
                 );
             }
-    
+
             return redirect()->back()->with('success', 'Reporte enviado con éxito.');
         } catch (\Throwable $th) {
             return redirect()->back()->withInput()->withErrors($th->validator)->with('error', 'Hubo un error al enviar tu reporte. Intenta de nuevo.');
@@ -186,7 +187,7 @@ class HomeController extends Controller
             ->get()
             ->map(function ($reporte) {
                 $fotos = $reporte->fotos
-                    ->map(fn ($foto) => Storage::url($foto->ruta))
+                    ->map(fn($foto) => Storage::url($foto->ruta))
                     ->values();
                 $foto = $fotos->first();
 
@@ -218,7 +219,7 @@ class HomeController extends Controller
             ->get()
             ->map(function ($reporte) {
                 $fotos = $reporte->fotos
-                    ->map(fn ($foto) => Storage::url($foto->ruta))
+                    ->map(fn($foto) => Storage::url($foto->ruta))
                     ->values();
                 $foto = $fotos->first();
 
@@ -291,25 +292,32 @@ class HomeController extends Controller
         });
 
         $coloniasRaw = Reporte::query()
-            ->leftJoin('cat_colonias', 'reportes.colonia_id', '=', 'cat_colonias.id')
-            ->leftJoin('cat_municipios', 'reportes.municipio_id', '=', 'cat_municipios.id')
+            ->join('cat_colonias', function ($join) {
+                $join->on('reportes.colonia_id', '=', 'cat_colonias.id')
+                    ->on('reportes.estado_id', '=', 'cat_colonias.id_estado')
+                    ->on('reportes.municipio_id', '=', 'cat_colonias.id_municipio');
+            })
+            ->join('cat_municipios', function ($join) {
+                $join->on('reportes.municipio_id', '=', 'cat_municipios.id')
+                    ->on('reportes.estado_id', '=', 'cat_municipios.id_estado');
+            })
             ->select(
                 'cat_colonias.nombre as colonia',
                 'cat_municipios.municipio as municipio',
                 DB::raw('count(*) as total')
             )
-            ->whereNotNull('reportes.colonia_id')
             ->groupBy('cat_colonias.nombre', 'cat_municipios.municipio')
             ->orderByDesc('total')
             ->get();
 
         $coloniasMax = $coloniasRaw->max('total') ?: 1;
+
         $colonias = $coloniasRaw->map(function ($registro) use ($coloniasMax) {
             return [
                 'colonia' => $registro->colonia ?? 'Sin colonia',
                 'municipio' => $registro->municipio ?? 'Sin municipio',
-                'total' => $registro->total,
-                'percent' => round(($registro->total / $coloniasMax) * 100),
+                'total' => (int) $registro->total,
+                'percent' => round(((int) $registro->total / $coloniasMax) * 100),
             ];
         });
 
@@ -356,7 +364,7 @@ class HomeController extends Controller
 
         $max = $series->max('total') ?: 1;
 
-        return $series->map(fn ($dia) => [
+        return $series->map(fn($dia) => [
             'label' => ucfirst($dia['fecha']),
             'total' => $dia['total'],
             'percent' => round(($dia['total'] / $max) * 100),
